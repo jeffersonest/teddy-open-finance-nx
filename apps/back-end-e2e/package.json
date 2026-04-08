@@ -1,0 +1,26 @@
+{
+  "name": "@teddy-open-finance/back-end-e2e",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "implicitDependencies": [
+      "@teddy-open-finance/back-end"
+    ],
+    "targets": {
+      "e2e": {
+        "executor": "@nx/jest:jest",
+        "outputs": [
+          "{projectRoot}/test-output/jest/coverage"
+        ],
+        "options": {
+          "jestConfig": "apps/back-end-e2e/jest.config.cts",
+          "passWithNoTests": true
+        },
+        "dependsOn": [
+          "@teddy-open-finance/back-end:build",
+          "@teddy-open-finance/back-end:serve"
+        ]
+      }
+    }
+  }
+}
