@@ -1,0 +1,9 @@
+{
+  "name": "@teddy-open-finance/front-end",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@tanstack/react-query": "^5.96.2",
+    "zustand": "^5.0.12"
+  }
+}
