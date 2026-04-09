@@ -3,7 +3,7 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { config as loadEnv } from 'dotenv';
 import { join } from 'node:path';
-import { EnvironmentVariables } from '../env/env.validation';
+import { EnvironmentVariables } from '../../env/env.validation';
 
 export const typeOrmFactory = (
   configService: ConfigService<EnvironmentVariables, true>,
@@ -15,9 +15,9 @@ export const typeOrmFactory = (
   password: configService.get('DATABASE_PASSWORD', { infer: true }),
   database: configService.get('DATABASE_NAME', { infer: true }),
   entities: [
-    join(__dirname, '..', '..', '..', 'modules', '**', 'infrastructure', 'schemas', '*.schema.{ts,js}'),
+    join(__dirname, '..', '..', '..', '..', 'modules', '**', 'infrastructure', 'schemas', '*.schema.{ts,js}'),
   ],
-  migrations: [join(__dirname, '..', '..', '..', 'migrations', '*.{ts,js}')],
+  migrations: [join(__dirname, 'migrations', '*.{ts,js}')],
   autoLoadEntities: true,
   synchronize: false,
   migrationsRun: false,
@@ -34,7 +34,7 @@ export const dataSource = new DataSource({
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE_NAME,
   entities: [
-    join(__dirname, '..', '..', '..', 'modules', '**', 'infrastructure', 'schemas', '*.schema.{ts,js}'),
+    join(__dirname, '..', '..', '..', '..', 'modules', '**', 'infrastructure', 'schemas', '*.schema.{ts,js}'),
   ],
-  migrations: [join(__dirname, '..', '..', '..', 'migrations', '*.{ts,js}')],
+  migrations: [join(__dirname, 'migrations', '*.{ts,js}')],
 } satisfies DataSourceOptions);
