@@ -3,7 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { LoggerModule } from 'nestjs-pino';
 import { validateEnv } from './infrastructure/config/env/env.validation';
-import { typeOrmFactory } from './infrastructure/config/database/typeorm.config';
+import { typeOrmFactory } from './infrastructure/config/database/typeorm/typeorm.config';
 import { HealthModule } from './infrastructure/health/health.module';
 
 @Module({
