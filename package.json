@@ -2,7 +2,21 @@
   "name": "@teddy-open-finance/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "prepare": "simple-git-hooks"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "npx lint-staged",
+    "pre-push": "npx nx affected -t lint typecheck test --base=origin/develop"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix"
+    ],
+    "*.{json,md,css,html,yml,yaml}": [
+      "prettier --write"
+    ]
+  },
   "private": true,
   "dependencies": {
     "@nestjs/common": "^11.0.0",
@@ -64,9 +78,11 @@
     "jest-util": "^30.0.2",
     "jiti": "2.4.2",
     "jsdom": "~22.1.0",
+    "lint-staged": "^16.4.0",
     "nx": "22.6.4",
     "postcss": "8.4.38",
     "prettier": "~3.6.2",
+    "simple-git-hooks": "^2.13.1",
     "tailwindcss": "3.4.3",
     "ts-jest": "^29.4.0",
     "ts-node": "10.9.1",
@@ -78,6 +94,7 @@
     "webpack-cli": "^5.1.4"
   },
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "libs/shared/*"
   ]
 }
