@@ -1,3 +1,4 @@
+import { DEFAULT_PAGE, DEFAULT_PAGE_SIZE, MAX_PAGE_SIZE } from '@teddy-open-finance/contracts';
 import { Client } from '../../domain/entities/client.js';
 import { ClientRepository } from '../../domain/interfaces/client.repository.js';
 
@@ -13,10 +14,6 @@ export interface ListClientsResult {
   pageSize: number;
   totalPages: number;
 }
-
-const DEFAULT_PAGE = 1;
-const DEFAULT_PAGE_SIZE = 16;
-const MAX_PAGE_SIZE = 100;
 
 export class ListClientsUseCase {
   constructor(private readonly clientRepository: ClientRepository) {}
