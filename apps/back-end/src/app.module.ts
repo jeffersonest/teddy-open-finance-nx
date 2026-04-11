@@ -5,6 +5,7 @@ import { LoggerModule } from 'nestjs-pino';
 import { validateEnv } from './infrastructure/config/env/env.validation';
 import { typeOrmFactory } from './infrastructure/config/database/typeorm/typeorm.config';
 import { HealthModule } from './infrastructure/health/health.module';
+import { ClientsModule } from './modules/clients/clients.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { HealthModule } from './infrastructure/health/health.module';
       useFactory: typeOrmFactory,
     }),
     HealthModule,
+    ClientsModule,
   ],
 })
 export class AppModule {}

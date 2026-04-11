@@ -15,7 +15,7 @@ export const typeOrmFactory = (
   password: configService.get('DATABASE_PASSWORD', { infer: true }),
   database: configService.get('DATABASE_NAME', { infer: true }),
   entities: [
-    join(__dirname, '..', '..', '..', '..', 'modules', '**', 'infrastructure', 'schemas', '*.schema.{ts,js}'),
+    join(__dirname, '..', '..', '..', '..', 'modules', '**', 'infrastructure', 'typeorm', 'schemas', '*.schema.{ts,js}'),
   ],
   migrations: [join(__dirname, 'migrations', '*.{ts,js}')],
   autoLoadEntities: true,
@@ -34,7 +34,7 @@ export const dataSource = new DataSource({
   password: process.env.DATABASE_PASSWORD,
   database: process.env.DATABASE_NAME,
   entities: [
-    join(__dirname, '..', '..', '..', '..', 'modules', '**', 'infrastructure', 'schemas', '*.schema.{ts,js}'),
+    join(__dirname, '..', '..', '..', '..', 'modules', '**', 'infrastructure', 'typeorm', 'schemas', '*.schema.{ts,js}'),
   ],
   migrations: [join(__dirname, 'migrations', '*.{ts,js}')],
 } satisfies DataSourceOptions);
