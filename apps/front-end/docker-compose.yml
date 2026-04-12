@@ -1,0 +1,7 @@
+services:
+  front-end:
+    container_name: teddy-front-end
+    image: apps-front-end
+    restart: unless-stopped
+    ports:
+      - '${FRONTEND_PORT:-5173}:80'
