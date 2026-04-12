@@ -1,9 +1,0 @@
-services:
-  front-end:
-    build:
-      context: ../..
-      dockerfile: apps/front-end/Dockerfile
-    ports:
-      - '5173:80'
-    environment:
-      - VITE_API_URL=http://localhost:3000

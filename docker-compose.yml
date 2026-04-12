@@ -1,0 +1,107 @@
+services:
+  back-end:
+    container_name: teddy-back-end
+    image: apps-back-end
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: ${DATABASE_USER:-teddy}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-teddy}
+      DATABASE_NAME: ${DATABASE_NAME:-teddy_open_finance}
+      DATABASE_RUN_MIGRATIONS: 'true'
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-do-not-use-in-prod}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev-refresh-secret-do-not-use-in-prod}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - '${PORT:-3000}:3000'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/healthz').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  front-end:
+    container_name: teddy-front-end
+    image: apps-front-end
+    restart: unless-stopped
+    ports:
+      - '${FRONTEND_PORT:-5173}:80'
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: teddy-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DATABASE_USER:-teddy}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-teddy}
+      POSTGRES_DB: ${DATABASE_NAME:-teddy_open_finance}
+    ports:
+      - '${DATABASE_PORT:-5432}:5432'
+    volumes:
+      - teddy-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U ${DATABASE_USER:-teddy} -d ${DATABASE_NAME:-teddy_open_finance}',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  loki:
+    image: grafana/loki:3.6.0
+    container_name: teddy-loki
+    restart: unless-stopped
+    command: ['-config.file=/etc/loki/config.yml']
+    ports:
+      - '3100:3100'
+    volumes:
+      - ./apps/back-end/observability/loki-config.yml:/etc/loki/config.yml:ro
+      - teddy-loki-data:/tmp/loki
+
+  promtail:
+    image: grafana/promtail:3.6.0
+    container_name: teddy-promtail
+    restart: unless-stopped
+    command: ['-config.file=/etc/promtail/config.yml']
+    depends_on:
+      - loki
+    volumes:
+      - ./apps/back-end/observability/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: teddy-grafana
+    restart: unless-stopped
+    depends_on:
+      - loki
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: 'true'
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+      GF_AUTH_DISABLE_LOGIN_FORM: 'true'
+    ports:
+      - '3001:3000'
+    volumes:
+      - teddy-grafana-data:/var/lib/grafana
+      - ./apps/back-end/observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+
+volumes:
+  teddy-pgdata:
+  teddy-loki-data:
+  teddy-grafana-data:
