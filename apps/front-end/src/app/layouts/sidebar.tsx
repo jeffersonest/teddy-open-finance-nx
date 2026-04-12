@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 
 const NAV_ITEMS = [
-  { to: '/', label: 'Home', icon: HomeIcon },
+  { to: '/dashboard', label: 'Dashboard', icon: HomeIcon },
   { to: '/clients', label: 'Clientes', icon: ClientsIcon },
   { to: '/selected-clients', label: 'Clientes selecionados', icon: SelectedClientsIcon },
 ];
@@ -28,7 +28,7 @@ export function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle:
           <NavLink
             key={item.to}
             to={item.to}
-            end={item.to === '/'}
+            end
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                 isActive
