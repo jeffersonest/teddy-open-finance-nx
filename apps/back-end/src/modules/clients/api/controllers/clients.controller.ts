@@ -9,6 +9,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Put,
   Query,
   UseFilters,
   UseGuards,
@@ -65,6 +66,16 @@ export class ClientsController {
   @ApiOkResponse({ type: ClientResponseDto })
   async getOne(@Param('id', new ParseUUIDPipe()) id: string): Promise<ClientResponseDto> {
     const client = await this.getClient.execute(id);
+    return ClientResponseDto.fromDomain(client);
+  }
+
+  @Put(':id')
+  @ApiOkResponse({ type: ClientResponseDto })
+  async replace(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() dto: CreateClientDto,
+  ): Promise<ClientResponseDto> {
+    const client = await this.updateClient.execute({ id, ...dto });
     return ClientResponseDto.fromDomain(client);
   }
 

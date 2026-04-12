@@ -53,7 +53,7 @@ export class TypeOrmClientRepository extends ClientRepository {
   }
 
   async delete(id: string): Promise<void> {
-    await this.repository.delete({ id });
+    await this.repository.softDelete({ id });
   }
 
   private toDomain(row: ClientPersistenceModel): Client {
@@ -77,6 +77,7 @@ export class TypeOrmClientRepository extends ClientRepository {
       accessCount: client.accessCount,
       createdAt: client.createdAt,
       updatedAt: client.updatedAt,
+      deletedAt: null,
     };
   }
 }
