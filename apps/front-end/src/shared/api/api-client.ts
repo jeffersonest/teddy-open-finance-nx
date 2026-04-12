@@ -25,18 +25,19 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true;
       const { refreshToken, setTokens, logout } = useAuthStore.getState();
 
-      if (refreshToken) {
-        try {
-          const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, {
-            refreshToken,
-          });
-          setTokens(data.accessToken, refreshToken);
-          originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
-          return apiClient(originalRequest);
-        } catch {
-          logout();
-        }
-      } else {
+      if (!refreshToken) {
+        logout();
+        return Promise.reject(error);
+      }
+
+      try {
+        const { data } = await axios.post(`${API_BASE_URL}/auth/refresh`, {
+          refreshToken,
+        });
+        setTokens(data.accessToken, refreshToken);
+        originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
+        return apiClient(originalRequest);
+      } catch {
         logout();
       }
     }
