@@ -5,6 +5,7 @@ import { LoggerModule } from 'nestjs-pino';
 import { validateEnv } from './infrastructure/config/env/env.validation';
 import { typeOrmFactory } from './infrastructure/config/database/typeorm/typeorm.config';
 import { HealthModule } from './infrastructure/health/health.module';
+import { MetricsModule } from './infrastructure/metrics/metrics.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ClientsModule } from './modules/clients/clients.module';
 
@@ -30,6 +31,7 @@ import { ClientsModule } from './modules/clients/clients.module';
       useFactory: typeOrmFactory,
     }),
     HealthModule,
+    MetricsModule,
     AuthModule,
     ClientsModule,
   ],

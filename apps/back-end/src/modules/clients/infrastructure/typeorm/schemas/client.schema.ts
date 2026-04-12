@@ -8,6 +8,7 @@ export interface ClientPersistenceModel {
   accessCount: number;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt: Date | null;
 }
 
 export const ClientSchema = new EntitySchema<ClientPersistenceModel>({
@@ -56,6 +57,12 @@ export const ClientSchema = new EntitySchema<ClientPersistenceModel>({
       name: 'updated_at',
       type: 'timestamptz',
       updateDate: true,
+    },
+    deletedAt: {
+      name: 'deleted_at',
+      type: 'timestamptz',
+      nullable: true,
+      deleteDate: true,
     },
   },
   indices: [

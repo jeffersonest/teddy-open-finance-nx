@@ -10,6 +10,7 @@ export class GetClientUseCase {
     if (!client) {
       throw new ClientNotFoundError(id);
     }
-    return client;
+    client.registerAccess();
+    return this.clientRepository.save(client);
   }
 }
