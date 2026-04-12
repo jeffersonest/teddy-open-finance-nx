@@ -6,20 +6,20 @@ import { authApi } from '../api/auth-api';
 
 export function useLogin() {
   const navigate = useNavigate();
-  const setAuth = useAuthStore((s) => s.setAuth);
+  const setAuth = useAuthStore((state) => state.setAuth);
 
   return useMutation({
-    mutationFn: (data: LoginRequest) => authApi.login(data),
-    onSuccess: (data) => {
-      setAuth(data.accessToken, data.refreshToken, data.user);
-      navigate('/dashboard');
+    mutationFn: (credentials: LoginRequest) => authApi.login(credentials),
+    onSuccess: (result) => {
+      setAuth(result.accessToken, result.refreshToken, result.user);
+      navigate('/');
     },
   });
 }
 
 export function useRegister() {
   return useMutation({
-    mutationFn: (data: { email: string; name: string; password: string }) =>
-      authApi.register(data),
+    mutationFn: (registrationData: { email: string; name: string; password: string }) =>
+      authApi.register(registrationData),
   });
 }
