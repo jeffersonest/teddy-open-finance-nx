@@ -11,8 +11,10 @@ import {
   Post,
   Query,
   UseFilters,
+  UseGuards,
 } from '@nestjs/common';
-import { ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../../../auth/infrastructure/jwt/jwt-auth.guard.js';
 import { CreateClientUseCase } from '../../application/use_cases/create-client.use-case.js';
 import { DeleteClientUseCase } from '../../application/use_cases/delete-client.use-case.js';
 import { GetClientUseCase } from '../../application/use_cases/get-client.use-case.js';
@@ -25,7 +27,9 @@ import { UpdateClientDto } from '../dto/update-client.dto.js';
 import { ClientExceptionFilter } from '../filters/client-exception.filter.js';
 
 @ApiTags('clients')
+@ApiBearerAuth()
 @Controller('clients')
+@UseGuards(JwtAuthGuard)
 @UseFilters(ClientExceptionFilter)
 export class ClientsController {
   constructor(
