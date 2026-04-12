@@ -1,6 +1,8 @@
-import { plainToInstance, Type } from 'class-transformer';
+import { plainToInstance, Transform, Type } from 'class-transformer';
 import {
+  IsBoolean,
   IsEnum,
+  IsIn,
   IsInt,
   IsNotEmpty,
   IsString,
@@ -62,6 +64,21 @@ export class EnvironmentVariables {
   @IsString()
   @IsNotEmpty()
   JWT_REFRESH_EXPIRES_IN = '7d';
+
+  @IsIn(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'])
+  LOG_LEVEL = 'info';
+
+  @Transform(({ value }) => value === true || value === 'true')
+  @IsBoolean()
+  LOG_PRETTY = false;
+
+  @IsString()
+  @IsNotEmpty()
+  LOG_APP_NAME = 'teddy-backend';
+
+  @Transform(({ value }) => value === true || value === 'true')
+  @IsBoolean()
+  DATABASE_RUN_MIGRATIONS = false;
 }
 
 export function validateEnv(config: Record<string, unknown>) {
