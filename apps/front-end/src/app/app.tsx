@@ -1,23 +1,28 @@
-import { Route, Routes } from 'react-router-dom';
-
-function Home() {
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-slate-900">
-          Teddy Open Finance
-        </h1>
-        <p className="mt-2 text-slate-600">Clientes MVP</p>
-      </div>
-    </main>
-  );
-}
+import { Route, Routes, Navigate } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
+import { PublicLayout } from './layouts/public-layout';
+import { ProtectedLayout } from './layouts/protected-layout';
+import { LoginPage } from '../features/auth/pages/login-page';
+import { DashboardPage } from '../features/dashboard/pages/dashboard-page';
+import { ClientsListPage } from '../features/clients/pages/clients-list-page';
+import { ClientDetailPage } from '../features/clients/pages/client-detail-page';
 
 export function App() {
   return (
-    <Routes>
-      <Route path="/" element={<Home />} />
-    </Routes>
+    <>
+      <Toaster position="top-right" />
+      <Routes>
+        <Route element={<PublicLayout />}>
+          <Route path="/login" element={<LoginPage />} />
+        </Route>
+        <Route element={<ProtectedLayout />}>
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/clients" element={<ClientsListPage />} />
+          <Route path="/clients/:id" element={<ClientDetailPage />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </>
   );
 }
 

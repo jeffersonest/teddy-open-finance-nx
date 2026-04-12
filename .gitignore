@@ -53,3 +53,9 @@ test-output
 .nx/polygraph
 vite.config.*.timestamp*
 vitest.config.*.timestamp*
+
+# Agent knowledge base (not versioned)
+MEMORY_PALACE.md
+
+# Figma design reference screenshots
+docs/pages/
