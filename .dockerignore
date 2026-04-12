@@ -1,0 +1,13 @@
+.git
+.github
+.nx
+node_modules
+dist
+tmp
+coverage
+.DS_Store
+.codex
+apps/*/dist
+apps/*/out-tsc
+apps/*/node_modules
+libs/*/dist

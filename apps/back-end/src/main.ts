@@ -3,9 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Logger } from 'nestjs-pino';
-import { AppModule } from './app.module';
-import { AllExceptionsFilter } from './infrastructure/http/filters/http-exception.filter';
-import { EnvironmentVariables } from './infrastructure/config/env/env.validation';
+import { AppModule } from './app.module.js';
+import { AllExceptionsFilter } from './infrastructure/http/filters/http-exception.filter.js';
+import { EnvironmentVariables } from './infrastructure/config/env/env.validation.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
