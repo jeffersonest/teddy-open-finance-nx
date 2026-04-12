@@ -5,7 +5,7 @@ export function PublicLayout() {
   const accessToken = useAuthStore((state) => state.accessToken);
 
   if (accessToken) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <Outlet />;

@@ -12,12 +12,19 @@ import {
 import { useNavigate } from 'react-router-dom';
 
 export function DashboardPage() {
-  const { data, isLoading } = useClients(1, 16);
+  const { data: clientsPage, isLoading } = useClients(1, 16);
   const navigate = useNavigate();
 
-  const totalClients = data?.total ?? 0;
-  const totalSalary = data?.data.reduce((acc, c) => acc + c.salary, 0) ?? 0;
-  const totalValuation = data?.data.reduce((acc, c) => acc + c.companyValuation, 0) ?? 0;
+  const clients = clientsPage?.data ?? [];
+  const totalClients = clientsPage?.total ?? 0;
+  const totalSalary = clients.reduce(
+    (salaryAccumulator, client) => salaryAccumulator + client.salary,
+    0
+  );
+  const totalValuation = clients.reduce(
+    (valuationAccumulator, client) => valuationAccumulator + client.companyValuation,
+    0
+  );
 
   const formatCurrency = (value: number) =>
     new Intl.NumberFormat('pt-BR', {
@@ -26,12 +33,12 @@ export function DashboardPage() {
       notation: 'compact',
     }).format(value);
 
-  const chartData = (data?.data ?? [])
+  const chartData = clients
     .slice(0, 10)
-    .map((c) => ({
-      name: c.name.length > 12 ? c.name.slice(0, 12) + '...' : c.name,
-      salary: c.salary,
-      valuation: c.companyValuation,
+    .map((client) => ({
+      name: client.name.length > 12 ? client.name.slice(0, 12) + '...' : client.name,
+      salary: client.salary,
+      valuation: client.companyValuation,
     }));
 
   return (
@@ -76,7 +83,7 @@ export function DashboardPage() {
         </Card>
       )}
 
-      {!isLoading && (data?.data.length ?? 0) > 0 && (
+      {!isLoading && clients.length > 0 && (
         <Card>
           <h2 className="mb-4 text-lg font-semibold text-slate-900">Últimos clientes</h2>
           <div className="overflow-x-auto">
@@ -90,7 +97,7 @@ export function DashboardPage() {
                 </tr>
               </thead>
               <tbody>
-                {(data?.data ?? []).slice(0, 5).map((client) => (
+                {clients.slice(0, 5).map((client) => (
                   <tr
                     key={client.id}
                     className="cursor-pointer border-b hover:bg-slate-50"
