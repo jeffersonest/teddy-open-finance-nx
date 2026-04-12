@@ -20,26 +20,31 @@ export function useClient(id: string) {
 }
 
 export function useCreateClient() {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: CreateClientRequest) => clientsApi.create(data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [CLIENTS_KEY] }),
+    mutationFn: (clientData: CreateClientRequest) => clientsApi.create(clientData),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [CLIENTS_KEY] }),
   });
 }
 
 export function useUpdateClient() {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateClientRequest }) =>
-      clientsApi.update(id, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [CLIENTS_KEY] }),
+    mutationFn: ({
+      clientId,
+      clientData,
+    }: {
+      clientId: string;
+      clientData: UpdateClientRequest;
+    }) => clientsApi.update(clientId, clientData),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [CLIENTS_KEY] }),
   });
 }
 
 export function useDeleteClient() {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => clientsApi.remove(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: [CLIENTS_KEY] }),
+    mutationFn: (clientId: string) => clientsApi.remove(clientId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: [CLIENTS_KEY] }),
   });
 }

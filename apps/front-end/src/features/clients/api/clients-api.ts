@@ -10,16 +10,18 @@ export const clientsApi = {
   list: (page = 1, pageSize = 16) =>
     apiClient
       .get<Paginated<Client>>('/clients', { params: { page, pageSize } })
-      .then((r) => r.data),
+      .then((response) => response.data),
 
-  getById: (id: string) =>
-    apiClient.get<Client>(`/clients/${id}`).then((r) => r.data),
+  getById: (clientId: string) =>
+    apiClient.get<Client>(`/clients/${clientId}`).then((response) => response.data),
 
-  create: (data: CreateClientRequest) =>
-    apiClient.post<Client>('/clients', data).then((r) => r.data),
+  create: (clientData: CreateClientRequest) =>
+    apiClient.post<Client>('/clients', clientData).then((response) => response.data),
 
-  update: (id: string, data: UpdateClientRequest) =>
-    apiClient.patch<Client>(`/clients/${id}`, data).then((r) => r.data),
+  update: (clientId: string, clientData: UpdateClientRequest) =>
+    apiClient
+      .patch<Client>(`/clients/${clientId}`, clientData)
+      .then((response) => response.data),
 
-  remove: (id: string) => apiClient.delete(`/clients/${id}`),
+  remove: (clientId: string) => apiClient.delete(`/clients/${clientId}`),
 };
