@@ -4,7 +4,7 @@ import type { Client } from '@teddy-open-finance/contracts';
 
 interface SelectedClientsState {
   clients: Client[];
-  addClient: (client: Client) => void;
+  addClient: (client: Client) => boolean;
   removeClient: (clientId: string) => void;
   clearAll: () => void;
 }
@@ -17,8 +17,9 @@ export const useSelectedClientsStore = create<SelectedClientsState>()(
         const alreadySelected = get().clients.some(
           (selectedClient) => selectedClient.id === clientToSelect.id,
         );
-        if (alreadySelected) return;
+        if (alreadySelected) return false;
         set((state) => ({ clients: [...state.clients, clientToSelect] }));
+        return true;
       },
       removeClient: (clientId) =>
         set((state) => ({

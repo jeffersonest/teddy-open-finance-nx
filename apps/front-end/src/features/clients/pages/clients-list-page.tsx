@@ -26,6 +26,7 @@ export function ClientsListPage() {
   const createClientMutation = useCreateClient();
   const updateClientMutation = useUpdateClient();
   const deleteClientMutation = useDeleteClient();
+  const selectedClients = useSelectedClientsStore((state) => state.clients);
   const addClientToSelection = useSelectedClientsStore((state) => state.addClient);
 
   const [showCreate, setShowCreate] = useState(false);
@@ -74,6 +75,7 @@ export function ClientsListPage() {
   const totalClients = data?.total ?? 0;
   const totalPages = data?.totalPages ?? 1;
   const clients = data?.data ?? [];
+  const selectedClientIds = new Set(selectedClients.map((selectedClient) => selectedClient.id));
 
   return (
     <div>
@@ -111,7 +113,14 @@ export function ClientsListPage() {
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {clients.map((client) => (
-              <Card key={client.id} className="flex flex-col items-center text-center">
+              <Card
+                key={client.id}
+                className={`flex flex-col items-center text-center transition-colors ${
+                  selectedClientIds.has(client.id)
+                    ? 'border-dashed border-sky-400 bg-sky-50/40'
+                    : ''
+                }`}
+              >
                 <h3 className="text-base font-bold text-slate-900">{client.name}</h3>
                 <p className="mt-1 text-sm text-slate-500">
                   Salário: {formatCurrency(client.salary)}
@@ -136,11 +145,20 @@ export function ClientsListPage() {
                   </button>
                   <button
                     onClick={() => {
-                      addClientToSelection(client);
+                      const wasAdded = addClientToSelection(client);
+                      if (!wasAdded) {
+                        toast(`${client.name} já está selecionado`);
+                        return;
+                      }
                       toast.success(`${client.name} adicionado aos selecionados`);
                     }}
-                    className="text-slate-400 transition-colors hover:text-orange-500"
+                    className={`transition-colors ${
+                      selectedClientIds.has(client.id)
+                        ? 'text-sky-500 hover:text-sky-600'
+                        : 'text-slate-400 hover:text-orange-500'
+                    }`}
                     aria-label={`Selecionar ${client.name}`}
+                    aria-pressed={selectedClientIds.has(client.id)}
                   >
                     <PlusIcon />
                   </button>

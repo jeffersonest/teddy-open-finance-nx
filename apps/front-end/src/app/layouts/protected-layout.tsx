@@ -1,51 +1,48 @@
-import { Navigate, Outlet, NavLink } from 'react-router-dom';
+import { useState } from 'react';
+import { Navigate, Outlet } from 'react-router-dom';
 import { useAuthStore } from '../../shared/auth/auth-store';
+import { Sidebar } from './sidebar';
 
 export function ProtectedLayout() {
-  const accessToken = useAuthStore((s) => s.accessToken);
-  const user = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   if (!accessToken) {
     return <Navigate to="/login" replace />;
   }
 
-  const linkClass = ({ isActive }: { isActive: boolean }) =>
-    `px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-      isActive
-        ? 'bg-orange-100 text-orange-700'
-        : 'text-slate-600 hover:bg-slate-100'
-    }`;
-
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="border-b bg-white">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-6">
-            <span className="text-lg font-bold text-slate-900">Teddy</span>
-            <nav className="flex gap-1">
-              <NavLink to="/dashboard" className={linkClass}>
-                Dashboard
-              </NavLink>
-              <NavLink to="/clients" className={linkClass}>
-                Clientes
-              </NavLink>
-            </nav>
-          </div>
+      <Sidebar
+        collapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed((prev) => !prev)}
+      />
+
+      <div
+        className={`transition-all duration-300 ${
+          sidebarCollapsed ? 'ml-16' : 'ml-60'
+        }`}
+      >
+        <header className="flex h-14 items-center justify-end border-b bg-white px-6">
           <div className="flex items-center gap-4">
-            <span className="text-sm text-slate-600">{user?.name}</span>
+            <span className="text-sm text-slate-600">
+              Olá, <strong>{user?.name}</strong>!
+            </span>
             <button
               onClick={logout}
-              className="text-sm text-red-500 hover:underline"
+              className="text-sm text-slate-500 hover:text-orange-500 hover:underline"
             >
               Sair
             </button>
           </div>
-        </div>
-      </header>
-      <main className="mx-auto max-w-7xl px-4 py-8">
-        <Outlet />
-      </main>
+        </header>
+
+        <main className="p-6">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }
