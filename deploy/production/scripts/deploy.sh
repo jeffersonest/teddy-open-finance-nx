@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+deploy_root="${DEPLOY_ROOT:-/opt/teddy-open-finance}"
+legacy_root="${LEGACY_ROOT:-/opt/oraculo}"
+
+if [[ ! -f "${deploy_root}/.env" ]]; then
+  echo "Missing ${deploy_root}/.env"
+  exit 1
+fi
+
+set -a
+source "${deploy_root}/.env"
+set +a
+
+if [[ "${CLEAN_LEGACY_STACK:-false}" == "true" && -f "${legacy_root}/docker-compose.yaml" ]]; then
+  docker compose -f "${legacy_root}/docker-compose.yaml" down --remove-orphans --volumes || true
+  docker ps -aq --filter label=com.docker.compose.project=oraculo | xargs -r docker rm -f
+  docker volume ls -q --filter label=com.docker.compose.project=oraculo | xargs -r docker volume rm -f
+  docker network ls -q --filter label=com.docker.compose.project=oraculo | xargs -r docker network rm
+  rm -rf "${legacy_root}"
+fi
+
+if [[ -n "${GHCR_USERNAME:-}" && -n "${GHCR_TOKEN:-}" ]]; then
+  printf '%s' "${GHCR_TOKEN}" | docker login ghcr.io --username "${GHCR_USERNAME}" --password-stdin
+fi
+
+cd "${deploy_root}"
+
+docker compose --env-file .env pull
+docker compose --env-file .env up -d --remove-orphans
+
+for service_name in backend-1 backend-2; do
+  for attempt in $(seq 1 20); do
+    if docker compose --env-file .env exec -T "${service_name}" node -e "fetch('http://127.0.0.1:3000/healthz').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"; then
+      break
+    fi
+
+    if [[ "${attempt}" -eq 20 ]]; then
+      echo "Healthcheck failed for ${service_name}"
+      docker compose --env-file .env logs --tail=80 "${service_name}"
+      exit 1
+    fi
+
+    sleep 5
+  done
+done
+
+docker compose --env-file .env ps
