@@ -20,6 +20,7 @@ env:
   FRONTEND_IMAGE: ghcr.io/jeffersonest/teddy-open-finance-nx-front-end
   VITE_API_URL: https://api.digai.chat
   DEPLOY_ROOT: /opt/teddy-open-finance
+  NX_NO_CLOUD: 'true'
 
 jobs:
   deploy:

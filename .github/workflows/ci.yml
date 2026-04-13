@@ -21,6 +21,8 @@ jobs:
   quality:
     name: Quality
     runs-on: ubuntu-latest
+    env:
+      NX_NO_CLOUD: 'true'
 
     steps:
       - name: Checkout repository
