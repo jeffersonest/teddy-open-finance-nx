@@ -3,7 +3,9 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "prepare": "simple-git-hooks"
+    "prepare": "simple-git-hooks",
+    "ci:quality": "npx nx affected -t lint typecheck test build",
+    "ci:deploy-gate": "npx nx run back-end-e2e:e2e && npx nx run front-end-e2e:e2e"
   },
   "simple-git-hooks": {
     "pre-commit": "npx lint-staged",
