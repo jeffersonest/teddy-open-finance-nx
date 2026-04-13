@@ -1,37 +1,27 @@
 import { useState } from 'react';
-import type {
-  Client,
-  CreateClientRequest,
-  UpdateClientRequest,
-} from '@teddy-open-finance/contracts';
+import type { Client, CreateClientRequest, UpdateClientRequest } from '@teddy-open-finance/contracts';
 import toast from 'react-hot-toast';
-import { Card } from '../../../shared/ui/card';
 import { Modal } from '../../../shared/ui/modal';
-import { Button } from '../../../shared/ui/button';
 import { ClientForm } from '../components/client-form';
-import {
-  useClients,
-  useCreateClient,
-  useUpdateClient,
-  useDeleteClient,
-} from '../hooks/use-clients';
+import { useClients, useCreateClient, useDeleteClient, useUpdateClient } from '../hooks/use-clients';
 import { useSelectedClientsStore } from '../../../shared/stores/selected-clients-store';
 
-const PAGE_SIZE_OPTIONS = [8, 12, 16];
+const PAGE_SIZE_OPTIONS = [16, 20, 30, 50];
 
 export function ClientsListPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(16);
+  const [showCreate, setShowCreate] = useState(false);
+  const [editingClient, setEditingClient] = useState<Client | null>(null);
+  const [deletingClient, setDeletingClient] = useState<Client | null>(null);
+
   const { data, isLoading } = useClients(page, pageSize);
   const createClientMutation = useCreateClient();
   const updateClientMutation = useUpdateClient();
   const deleteClientMutation = useDeleteClient();
+
   const selectedClients = useSelectedClientsStore((state) => state.clients);
   const addClientToSelection = useSelectedClientsStore((state) => state.addClient);
-
-  const [showCreate, setShowCreate] = useState(false);
-  const [editingClient, setEditingClient] = useState<Client | null>(null);
-  const [deletingClient, setDeletingClient] = useState<Client | null>(null);
 
   const handleCreate = (formData: CreateClientRequest) => {
     createClientMutation.mutate(formData, {
@@ -44,7 +34,10 @@ export function ClientsListPage() {
   };
 
   const handleUpdate = (formData: CreateClientRequest) => {
-    if (!editingClient) return;
+    if (!editingClient) {
+      return;
+    }
+
     const clientData: UpdateClientRequest = formData;
     updateClientMutation.mutate(
       { clientId: editingClient.id, clientData },
@@ -59,7 +52,10 @@ export function ClientsListPage() {
   };
 
   const handleConfirmDelete = () => {
-    if (!deletingClient) return;
+    if (!deletingClient) {
+      return;
+    }
+
     deleteClientMutation.mutate(deletingClient.id, {
       onSuccess: () => {
         toast.success('Cliente excluído');
@@ -78,23 +74,23 @@ export function ClientsListPage() {
   const selectedClientIds = new Set(selectedClients.map((selectedClient) => selectedClient.id));
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
-        <p className="text-sm text-slate-600">
-          <strong>{totalClients}</strong> clientes encontrados:
-        </p>
-        <div className="flex items-center gap-2">
-          <label htmlFor="page-size" className="text-sm text-slate-500">
+    <section className="clients-page">
+      <div className="clients-page__top">
+        <h1 className="clients-page__found">
+          <strong className="clients-page__found-count">{totalClients}</strong> clientes encontrados:
+        </h1>
+        <div className="clients-page__per-page">
+          <label className="clients-page__per-page-label" htmlFor="page-size">
             Clientes por página:
           </label>
           <select
+            className="clients-page__per-page-select"
             id="page-size"
             value={pageSize}
             onChange={(event) => {
               setPageSize(Number(event.target.value));
               setPage(1);
             }}
-            className="rounded border border-slate-300 px-2 py-1 text-sm"
           >
             {PAGE_SIZE_OPTIONS.map((size) => (
               <option key={size} value={size}>
@@ -105,45 +101,41 @@ export function ClientsListPage() {
         </div>
       </div>
 
-      {isLoading ? (
-        <p className="text-slate-500">Carregando...</p>
-      ) : clients.length === 0 ? (
-        <p className="text-slate-500">Nenhum cliente cadastrado.</p>
-      ) : (
+      {isLoading ? <p className="clients-page__empty">Carregando...</p> : null}
+      {!isLoading && clients.length === 0 ? (
+        <p className="clients-page__empty">Nenhum cliente cadastrado.</p>
+      ) : null}
+      {!isLoading && clients.length > 0 ? (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="clients-grid">
             {clients.map((client) => (
-              <Card
+              <article
                 key={client.id}
-                className={`flex flex-col items-center text-center transition-colors ${
-                  selectedClientIds.has(client.id)
-                    ? 'border-dashed border-sky-400 bg-sky-50/40'
-                    : ''
-                }`}
+                className={`client-card ${selectedClientIds.has(client.id) ? 'client-card--selected' : ''}`}
               >
-                <h3 className="text-base font-bold text-slate-900">{client.name}</h3>
-                <p className="mt-1 text-sm text-slate-500">
-                  Salário: {formatCurrency(client.salary)}
-                </p>
-                <p className="text-sm text-slate-500">
-                  Empresa: {formatCurrency(client.companyValuation)}
-                </p>
-                <div className="mt-4 flex gap-4">
+                <h2 className="client-card__name">{client.name}</h2>
+                <p className="client-card__line">Salário: {formatCurrency(client.salary)}</p>
+                <p className="client-card__line">Empresa: {formatCurrency(client.companyValuation)}</p>
+                <div className="client-card__actions">
                   <button
+                    type="button"
+                    className="client-card__action"
                     onClick={() => setEditingClient(client)}
-                    className="text-slate-400 transition-colors hover:text-orange-500"
                     aria-label={`Editar ${client.name}`}
                   >
-                    <PencilIcon />
+                    <img src="/reference-assets/edit-icon.svg" alt="" />
                   </button>
                   <button
+                    type="button"
+                    className="client-card__action"
                     onClick={() => setDeletingClient(client)}
-                    className="text-slate-400 transition-colors hover:text-red-500"
                     aria-label={`Excluir ${client.name}`}
                   >
-                    <TrashIcon />
+                    <img src="/reference-assets/delete-icon.svg" alt="" />
                   </button>
                   <button
+                    type="button"
+                    className={`client-card__action client-card__action--plus ${selectedClientIds.has(client.id) ? 'client-card__action--active' : ''}`}
                     onClick={() => {
                       const wasAdded = addClientToSelection(client);
                       if (!wasAdded) {
@@ -152,48 +144,41 @@ export function ClientsListPage() {
                       }
                       toast.success(`${client.name} adicionado aos selecionados`);
                     }}
-                    className={`transition-colors ${
-                      selectedClientIds.has(client.id)
-                        ? 'text-sky-500 hover:text-sky-600'
-                        : 'text-slate-400 hover:text-orange-500'
-                    }`}
                     aria-label={`Selecionar ${client.name}`}
-                    aria-pressed={selectedClientIds.has(client.id)}
                   >
-                    <PlusIcon />
+                    <img src="/reference-assets/plus-icon.svg" alt="" />
                   </button>
                 </div>
-              </Card>
+              </article>
             ))}
           </div>
-
-          {totalPages > 1 && (
-            <div className="mt-8 flex items-center justify-center gap-2">
-              {Array.from({ length: totalPages }, (_, index) => index + 1).map(
-                (pageNumber) => (
-                  <button
-                    key={pageNumber}
-                    onClick={() => setPage(pageNumber)}
-                    className={`h-8 w-8 rounded text-sm font-medium transition-colors ${
-                      pageNumber === page
-                        ? 'bg-orange-500 text-white'
-                        : 'text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    {pageNumber}
-                  </button>
-                ),
-              )}
-            </div>
-          )}
+          <button type="button" className="clients-page__create-button" onClick={() => setShowCreate(true)}>
+            Criar cliente
+          </button>
+          {totalPages > 1 ? (
+            <nav className="clients-pagination" aria-label="Paginação de clientes">
+              {buildPagination(page, totalPages).map((paginationItem, itemIndex) => (
+                <button
+                  key={`${paginationItem}-${itemIndex}`}
+                  type="button"
+                  className={`clients-pagination__item ${
+                    paginationItem === page ? 'clients-pagination__item--active' : ''
+                  } ${paginationItem === '...' ? 'clients-pagination__ellipsis' : ''}`}
+                  onClick={() => {
+                    if (typeof paginationItem !== 'number') {
+                      return;
+                    }
+                    setPage(paginationItem);
+                  }}
+                  disabled={paginationItem === '...'}
+                >
+                  {paginationItem}
+                </button>
+              ))}
+            </nav>
+          ) : null}
         </>
-      )}
-
-      <div className="mt-6 flex justify-center">
-        <Button onClick={() => setShowCreate(true)} className="w-full max-w-xs">
-          Criar cliente
-        </Button>
-      </div>
+      ) : null}
 
       <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Criar cliente:">
         <ClientForm
@@ -203,12 +188,8 @@ export function ClientsListPage() {
         />
       </Modal>
 
-      <Modal
-        open={!!editingClient}
-        onClose={() => setEditingClient(null)}
-        title="Editar cliente:"
-      >
-        {editingClient && (
+      <Modal open={!!editingClient} onClose={() => setEditingClient(null)} title="Editar cliente:">
+        {editingClient ? (
           <ClientForm
             defaultValues={{
               name: editingClient.name,
@@ -219,53 +200,42 @@ export function ClientsListPage() {
             loading={updateClientMutation.isPending}
             submitLabel="Editar cliente"
           />
-        )}
+        ) : null}
       </Modal>
 
-      <Modal
-        open={!!deletingClient}
-        onClose={() => setDeletingClient(null)}
-        title="Excluir cliente:"
-      >
-        {deletingClient && (
-          <div className="flex flex-col gap-4">
-            <p className="text-sm text-slate-600">
-              Você está prestes a excluir o cliente:{' '}
-              <strong>{deletingClient.name}</strong>.
+      <Modal open={!!deletingClient} onClose={() => setDeletingClient(null)} title="Excluir cliente:">
+        {deletingClient ? (
+          <>
+            <p className="app-modal__delete-text">
+              Você está prestes a excluir o cliente: <strong>{deletingClient.name}</strong>
             </p>
-            <Button
+            <button
+              type="button"
+              className="app-modal__submit app-modal__submit--delete"
               onClick={handleConfirmDelete}
-              loading={deleteClientMutation.isPending}
+              disabled={deleteClientMutation.isPending}
             >
-              Excluir cliente
-            </Button>
-          </div>
-        )}
+              {deleteClientMutation.isPending ? 'Excluindo...' : 'Excluir cliente'}
+            </button>
+          </>
+        ) : null}
       </Modal>
-    </div>
+    </section>
   );
 }
 
-function PencilIcon() {
-  return (
-    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-    </svg>
-  );
-}
+function buildPagination(currentPage: number, totalPages: number): Array<number | '...'> {
+  if (totalPages <= 5) {
+    return Array.from({ length: totalPages }, (_, pageIndex) => pageIndex + 1);
+  }
 
-function TrashIcon() {
-  return (
-    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-    </svg>
-  );
-}
+  if (currentPage <= 2) {
+    return [1, 2, 3, '...', totalPages];
+  }
 
-function PlusIcon() {
-  return (
-    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-    </svg>
-  );
+  if (currentPage >= totalPages - 1) {
+    return [1, '...', totalPages - 2, totalPages - 1, totalPages];
+  }
+
+  return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
 }

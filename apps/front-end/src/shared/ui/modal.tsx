@@ -19,20 +19,17 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-600"
-          >
-            &times;
+    <>
+      <div className="app-modal-backdrop" onClick={onClose} />
+      <section className="app-modal" role="dialog" aria-modal="true">
+        <div className="app-modal__header">
+          <h2 className="app-modal__title">{title}</h2>
+          <button type="button" className="app-modal__close" onClick={onClose} aria-label="Fechar modal">
+            <img src="/reference-assets/x-icon.svg" alt="" width={12} height={12} />
           </button>
         </div>
         {children}
-      </div>
-    </div>
+      </section>
+    </>
   );
 }

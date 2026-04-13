@@ -1,4 +1,3 @@
-import { Card } from '../../../shared/ui/card';
 import { useSelectedClientsStore } from '../../../shared/stores/selected-clients-store';
 
 export function SelectedClientsPage() {
@@ -10,54 +9,46 @@ export function SelectedClientsPage() {
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
   return (
-    <div>
-      <h1 className="mb-6 text-lg font-bold text-slate-900">Clientes selecionados:</h1>
+    <section className="selected-clients-page">
+      <h1 className="selected-clients-page__title">Clientes selecionados:</h1>
 
       {selectedClients.length === 0 ? (
-        <p className="text-sm text-slate-500">Nenhum cliente selecionado.</p>
+        <p className="clients-page__empty">Nenhum cliente selecionado.</p>
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="selected-clients-grid">
             {selectedClients.map((client) => (
-              <Card key={client.id} className="flex flex-col items-center text-center">
-                <h3 className="text-base font-bold text-slate-900">{client.name}</h3>
-                <p className="mt-1 text-sm text-slate-500">
+              <article key={client.id} className="selected-client-card">
+                <h2 className="selected-client-card__name">{client.name}</h2>
+                <p className="selected-client-card__line">
                   Salário: {formatCurrency(client.salary)}
                 </p>
-                <p className="text-sm text-slate-500">
+                <p className="selected-client-card__line">
                   Empresa: {formatCurrency(client.companyValuation)}
                 </p>
-                <div className="mt-4">
+                <div className="selected-client-card__actions">
                   <button
+                    type="button"
                     onClick={() => removeSelectedClient(client.id)}
-                    className="text-orange-500 transition-colors hover:text-orange-700"
+                    className="selected-client-card__remove"
                     aria-label={`Remover ${client.name}`}
                   >
-                    <MinusIcon />
+                    <img src="/reference-assets/--icon.svg" alt="" />
                   </button>
                 </div>
-              </Card>
+              </article>
             ))}
           </div>
 
-          <div className="mt-8 flex justify-center">
-            <button
-              onClick={clearSelectedClients}
-              className="w-full max-w-2xl rounded border border-orange-500 px-4 py-3 text-sm font-medium text-orange-500 transition-colors hover:bg-orange-50"
-            >
-              Limpar clientes selecionados
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={clearSelectedClients}
+            className="clients-page__create-button"
+          >
+            Limpar clientes selecionados
+          </button>
         </>
       )}
-    </div>
-  );
-}
-
-function MinusIcon() {
-  return (
-    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M20 12H4" />
-    </svg>
+    </section>
   );
 }
