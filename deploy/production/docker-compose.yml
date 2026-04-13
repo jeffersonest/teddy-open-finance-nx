@@ -1,0 +1,181 @@
+name: teddy-open-finance
+
+x-backend-env: &backend-env
+  NODE_ENV: production
+  PORT: 3000
+  DATABASE_HOST: postgres
+  DATABASE_PORT: 5432
+  DATABASE_USER: ${DATABASE_USER}
+  DATABASE_PASSWORD: ${DATABASE_PASSWORD}
+  DATABASE_NAME: ${DATABASE_NAME}
+  DATABASE_RUN_MIGRATIONS: ${DATABASE_RUN_MIGRATIONS:-true}
+  JWT_SECRET: ${JWT_SECRET}
+  JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
+  JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+  JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+  LOG_LEVEL: ${LOG_LEVEL:-info}
+  LOG_PRETTY: ${LOG_PRETTY:-false}
+  LOG_APP_NAME: ${LOG_APP_NAME:-teddy-backend}
+
+x-backend-service: &backend-service
+  image: ${BACKEND_IMAGE}:${IMAGE_TAG}
+  restart: unless-stopped
+  depends_on:
+    postgres:
+      condition: service_healthy
+  environment:
+    <<: *backend-env
+  expose:
+    - '3000'
+  healthcheck:
+    test:
+      [
+        'CMD',
+        'node',
+        '-e',
+        "fetch('http://127.0.0.1:3000/healthz').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))",
+      ]
+    interval: 15s
+    timeout: 5s
+    retries: 10
+    start_period: 30s
+  networks:
+    - edge
+    - private
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      frontend:
+        condition: service_started
+      backend-1:
+        condition: service_healthy
+      backend-2:
+        condition: service_healthy
+      grafana:
+        condition: service_started
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN}
+      API_DOMAIN: ${API_DOMAIN}
+      GRAFANA_DOMAIN: ${GRAFANA_DOMAIN}
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - edge
+      - private
+
+  frontend:
+    image: ${FRONTEND_IMAGE}:${IMAGE_TAG}
+    restart: unless-stopped
+    expose:
+      - '80'
+    networks:
+      - edge
+
+  backend-1:
+    <<: *backend-service
+
+  backend-2:
+    <<: *backend-service
+
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_DB: ${DATABASE_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - private
+
+  prometheus:
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    depends_on:
+      backend-1:
+        condition: service_healthy
+      backend-2:
+        condition: service_healthy
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=7d'
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - private
+
+  loki:
+    image: grafana/loki:3.6.0
+    restart: unless-stopped
+    command:
+      - '-config.file=/etc/loki/config.yml'
+    volumes:
+      - ./loki-config.yml:/etc/loki/config.yml:ro
+      - loki_data:/loki
+    networks:
+      - private
+
+  promtail:
+    image: grafana/promtail:3.6.0
+    restart: unless-stopped
+    depends_on:
+      loki:
+        condition: service_started
+    command:
+      - '-config.file=/etc/promtail/config.yml'
+    volumes:
+      - ./promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+    networks:
+      - private
+
+  grafana:
+    image: grafana/grafana:latest
+    restart: unless-stopped
+    depends_on:
+      prometheus:
+        condition: service_started
+      loki:
+        condition: service_started
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
+      GF_SERVER_ROOT_URL: https://${GRAFANA_DOMAIN}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+      GF_USERS_ALLOW_ORG_CREATE: 'false'
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - private
+
+networks:
+  edge:
+  private:
+
+volumes:
+  caddy_data:
+  caddy_config:
+  postgres_data:
+  prometheus_data:
+  loki_data:
+  grafana_data:

@@ -1,4 +1,39 @@
 services:
+  back-end:
+    container_name: teddy-back-end
+    image: apps-back-end
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: ${DATABASE_USER:-teddy}
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:-teddy}
+      DATABASE_NAME: ${DATABASE_NAME:-teddy_open_finance}
+      DATABASE_RUN_MIGRATIONS: 'true'
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-do-not-use-in-prod}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-dev-refresh-secret-do-not-use-in-prod}
+      JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN:-7d}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - '${PORT:-3000}:3000'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/healthz').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
   postgres:
     image: postgres:16-alpine
     container_name: teddy-postgres
@@ -12,7 +47,11 @@ services:
     volumes:
       - teddy-pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${DATABASE_USER:-teddy} -d ${DATABASE_NAME:-teddy_open_finance}']
+      test:
+        [
+          'CMD-SHELL',
+          'pg_isready -U ${DATABASE_USER:-teddy} -d ${DATABASE_NAME:-teddy_open_finance}',
+        ]
       interval: 5s
       timeout: 5s
       retries: 5
