@@ -1,13 +1,17 @@
 import { useForm } from 'react-hook-form';
 import type { CreateClientRequest } from '@teddy-open-finance/contracts';
-import { Button } from '../../../shared/ui/button';
-import { Input } from '../../../shared/ui/input';
 
 interface ClientFormProps {
   defaultValues?: Partial<CreateClientRequest>;
   onSubmit: (data: CreateClientRequest) => void;
   loading?: boolean;
   submitLabel?: string;
+}
+
+interface ClientFormData {
+  name: string;
+  salary: string;
+  companyValuation: string;
 }
 
 export function ClientForm({
@@ -20,49 +24,119 @@ export function ClientForm({
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<CreateClientRequest>({ defaultValues });
+  } = useForm<ClientFormData>({
+    defaultValues: {
+      name: defaultValues?.name ?? '',
+      salary: formatCurrencyFromNumber(defaultValues?.salary),
+      companyValuation: formatCurrencyFromNumber(defaultValues?.companyValuation),
+    },
+  });
+
+  const handleValidSubmit = (formData: ClientFormData) => {
+    onSubmit({
+      name: formData.name.trim(),
+      salary: parseCurrencyValue(formData.salary),
+      companyValuation: parseCurrencyValue(formData.companyValuation),
+    });
+  };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-      <Input
-        id="client-name"
-        label="Nome"
-        placeholder="Nome do cliente"
-        error={errors.name?.message}
-        {...register('name', {
-          required: 'Nome obrigatório',
-          minLength: { value: 2, message: 'Mínimo 2 caracteres' },
-        })}
-      />
-      <Input
-        id="client-salary"
-        label="Salário"
-        type="number"
-        step="0.01"
-        placeholder="0.00"
-        error={errors.salary?.message}
-        {...register('salary', {
-          required: 'Salário obrigatório',
-          valueAsNumber: true,
-          min: { value: 0, message: 'Deve ser positivo' },
-        })}
-      />
-      <Input
-        id="client-valuation"
-        label="Valor da empresa"
-        type="number"
-        step="0.01"
-        placeholder="0.00"
-        error={errors.companyValuation?.message}
-        {...register('companyValuation', {
-          required: 'Valor obrigatório',
-          valueAsNumber: true,
-          min: { value: 0, message: 'Deve ser positivo' },
-        })}
-      />
-      <Button type="submit" loading={loading}>
-        {submitLabel}
-      </Button>
+    <form className="app-modal__form" onSubmit={handleSubmit(handleValidSubmit)}>
+      <div className="app-modal__field">
+        <input
+          className={`app-modal__input ${errors.name ? 'app-modal__input--error' : ''}`}
+          id="client-name"
+          placeholder="Digite o nome:"
+          {...register('name', {
+            required: 'Informe o nome do cliente.',
+            minLength: { value: 2, message: 'Nome deve ter pelo menos 2 caracteres.' },
+          })}
+        />
+        <p className="app-modal__field-error">{errors.name?.message}</p>
+      </div>
+      <div className="app-modal__field">
+        <input
+          className={`app-modal__input ${errors.salary ? 'app-modal__input--error' : ''}`}
+          id="client-salary"
+          placeholder="Digite o salário:"
+          {...register('salary', {
+            required: 'Informe o salário.',
+            validate: (inputValue) => parseCurrencyValue(inputValue) > 0 || 'Informe um salário válido.',
+            onChange: (event) => {
+              const inputElement = event.target as HTMLInputElement;
+              inputElement.value = formatCurrencyMask(inputElement.value);
+            },
+          })}
+        />
+        <p className="app-modal__field-error">{errors.salary?.message}</p>
+      </div>
+      <div className="app-modal__field">
+        <input
+          className={`app-modal__input ${errors.companyValuation ? 'app-modal__input--error' : ''}`}
+          id="client-company-value"
+          placeholder="Digite o valor da empresa:"
+          {...register('companyValuation', {
+            required: 'Informe o valor da empresa.',
+            validate: (inputValue) =>
+              parseCurrencyValue(inputValue) > 0 || 'Informe um valor de empresa válido.',
+            onChange: (event) => {
+              const inputElement = event.target as HTMLInputElement;
+              inputElement.value = formatCurrencyMask(inputElement.value);
+            },
+          })}
+        />
+        <p className="app-modal__field-error">{errors.companyValuation?.message}</p>
+      </div>
+      <button className="app-modal__submit" type="submit" disabled={loading}>
+        {loading ? 'Salvando...' : submitLabel}
+      </button>
     </form>
   );
+}
+
+function parseCurrencyValue(inputValue: string) {
+  const digitsOnly = inputValue.replace(/\D/g, '');
+
+  if (digitsOnly.length === 0) {
+    return 0;
+  }
+
+  const parsedValue = Number.parseInt(digitsOnly, 10) / 100;
+
+  if (Number.isNaN(parsedValue)) {
+    return 0;
+  }
+
+  return parsedValue;
+}
+
+function formatCurrencyMask(inputValue: string) {
+  const digitsOnly = inputValue.replace(/\D/g, '');
+
+  if (digitsOnly.length === 0) {
+    return '';
+  }
+
+  const integerValue = Number.parseInt(digitsOnly, 10);
+  const valueInReais = integerValue / 100;
+
+  if (Number.isNaN(valueInReais)) {
+    return '';
+  }
+
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(valueInReais);
+}
+
+function formatCurrencyFromNumber(rawValue?: number) {
+  if (!rawValue || rawValue <= 0) {
+    return '';
+  }
+
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(rawValue);
 }

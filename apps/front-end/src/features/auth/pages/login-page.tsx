@@ -20,9 +20,9 @@ export function LoginPage() {
   const [isRegister, setIsRegister] = useState(false);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
-      <div className="w-full max-w-md text-center">
-        <h1 className="mb-8 text-2xl font-bold text-slate-900">Olá, seja bem-vindo!</h1>
+    <main className="login-page">
+      <div className="login-page__content">
+        <h1 className="login-page__title">Olá, seja bem-vindo!</h1>
 
         {isRegister ? (
           <RegisterForm onToggle={() => setIsRegister(false)} />
@@ -49,11 +49,12 @@ function LoginForm({ onToggle }: { onToggle: () => void }) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="login-page__form">
       <Input
         id="email"
         type="email"
         placeholder="Digite o seu email:"
+        className="login-page__input"
         error={errors.email?.message}
         {...register('email', { required: 'Email obrigatório' })}
       />
@@ -61,19 +62,20 @@ function LoginForm({ onToggle }: { onToggle: () => void }) {
         id="password"
         type="password"
         placeholder="Digite a sua senha:"
+        className="login-page__input"
         error={errors.password?.message}
         {...register('password', {
           required: 'Senha obrigatória',
           minLength: { value: 6, message: 'Mínimo 6 caracteres' },
         })}
       />
-      <Button type="submit" loading={loginMutation.isPending} className="w-full rounded-md py-3">
+      <Button type="submit" loading={loginMutation.isPending} className="login-page__submit">
         Entrar
       </Button>
       <button
         type="button"
         onClick={onToggle}
-        className="text-sm text-orange-500 hover:underline"
+        className="login-page__toggle"
       >
         Não tem conta? Cadastre-se
       </button>
@@ -100,10 +102,11 @@ function RegisterForm({ onToggle }: { onToggle: () => void }) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="login-page__form">
       <Input
         id="name"
         placeholder="Digite o seu nome:"
+        className="login-page__input"
         error={errors.name?.message}
         {...register('name', {
           required: 'Nome obrigatório',
@@ -114,6 +117,7 @@ function RegisterForm({ onToggle }: { onToggle: () => void }) {
         id="reg-email"
         type="email"
         placeholder="Digite o seu email:"
+        className="login-page__input"
         error={errors.email?.message}
         {...register('email', { required: 'Email obrigatório' })}
       />
@@ -121,19 +125,20 @@ function RegisterForm({ onToggle }: { onToggle: () => void }) {
         id="reg-password"
         type="password"
         placeholder="Digite a sua senha:"
+        className="login-page__input"
         error={errors.password?.message}
         {...register('password', {
           required: 'Senha obrigatória',
           minLength: { value: 6, message: 'Mínimo 6 caracteres' },
         })}
       />
-      <Button type="submit" loading={registerMutation.isPending} className="w-full rounded-md py-3">
+      <Button type="submit" loading={registerMutation.isPending} className="login-page__submit">
         Cadastrar
       </Button>
       <button
         type="button"
         onClick={onToggle}
-        className="text-sm text-orange-500 hover:underline"
+        className="login-page__toggle"
       >
         Já tem conta? Faça login
       </button>
