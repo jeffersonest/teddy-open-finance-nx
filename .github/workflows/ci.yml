@@ -23,6 +23,26 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NX_NO_CLOUD: 'true'
+      DATABASE_HOST: localhost
+      DATABASE_PORT: 5432
+      DATABASE_USER: teddy
+      DATABASE_PASSWORD: teddy
+      DATABASE_NAME: teddy_open_finance_ci
+      NODE_ENV: test
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: teddy
+          POSTGRES_PASSWORD: teddy
+          POSTGRES_DB: teddy_open_finance_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U teddy -d teddy_open_finance_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
 
     steps:
       - name: Checkout repository
@@ -41,6 +61,9 @@ jobs:
 
       - name: Derive SHAs for affected commands
         uses: nrwl/nx-set-shas@v4
+
+      - name: Run backend migrations smoke check
+        run: npx nx run @teddy-open-finance/back-end:migrate:run
 
       - name: Run affected lint, typecheck, test and build
         run: npx nx affected -t lint typecheck test build

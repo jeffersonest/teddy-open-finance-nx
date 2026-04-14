@@ -4,6 +4,15 @@ import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { config as loadEnv } from 'dotenv';
 import { DataSource, DataSourceOptions } from 'typeorm';
 import { EnvironmentVariables } from '../../env/env.validation.js';
+import { CreateClientsTable1744200000000 } from './migrations/1744200000000-CreateClientsTable.js';
+import { CreateUsersTable1744300000000 } from './migrations/1744300000000-CreateUsersTable.js';
+import { AddSoftDeleteToClients1744400000000 } from './migrations/1744400000000-AddSoftDeleteToClients.js';
+
+const migrations = [
+  CreateClientsTable1744200000000,
+  CreateUsersTable1744300000000,
+  AddSoftDeleteToClients1744400000000,
+];
 
 export const typeOrmFactory = (
   configService: ConfigService<EnvironmentVariables, true>,
@@ -29,7 +38,7 @@ export const typeOrmFactory = (
       '*.schema.{ts,js}',
     ),
   ],
-  migrations: [join(__dirname, 'migrations', '*.{ts,js}')],
+  migrations,
   autoLoadEntities: true,
   synchronize: false,
   migrationsRun: configService.get('DATABASE_RUN_MIGRATIONS', { infer: true }),
@@ -59,5 +68,5 @@ export const dataSource = new DataSource({
       '*.schema.{ts,js}',
     ),
   ],
-  migrations: [join(__dirname, 'migrations', '*.{ts,js}')],
+  migrations,
 } satisfies DataSourceOptions);
