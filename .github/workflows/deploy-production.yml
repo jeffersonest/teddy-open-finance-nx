@@ -87,11 +87,26 @@ jobs:
       - name: Prepare SSH
         run: |
           install -m 700 -d ~/.ssh
-          cat <<'EOF' > ~/.ssh/id_ed25519
-          ${{ secrets.PROD_VPS_SSH_KEY }}
-          EOF
+          printf '%s\n' "${{ secrets.PROD_VPS_SSH_KEY }}" > ~/.ssh/id_ed25519
+          sed -i 's/\r$//' ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ secrets.PROD_VPS_HOST }} >> ~/.ssh/known_hosts
+          touch ~/.ssh/known_hosts
+
+          host="${{ secrets.PROD_VPS_HOST }}"
+          keyscan_succeeded=false
+          for attempt in 1 2 3 4 5; do
+            if ssh-keyscan -T 10 -H "$host" >> ~/.ssh/known_hosts 2>/dev/null; then
+              keyscan_succeeded=true
+              break
+            fi
+            echo "ssh-keyscan failed on attempt ${attempt}, retrying..."
+            sleep 5
+          done
+
+          if [ "$keyscan_succeeded" != "true" ]; then
+            echo "Failed to fetch SSH host key for ${host} after retries."
+            exit 1
+          fi
 
       - name: Sync deploy stack
         run: |
