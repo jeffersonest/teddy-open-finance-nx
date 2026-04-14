@@ -2,6 +2,10 @@
 	reverse_proxy frontend:80
 }
 
+app.digai.chat {
+	redir https://{$APP_DOMAIN}{uri} 301
+}
+
 {$API_DOMAIN} {
 	reverse_proxy backend-1:3000 backend-2:3000 {
 		lb_policy round_robin
