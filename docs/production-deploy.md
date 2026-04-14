@@ -13,6 +13,14 @@ The repository now expects two workflows:
 - `CI`: runs `nx affected -t lint typecheck test build`
 - `Deploy Production`: builds the apps, publishes Docker images to GHCR and deploys the stack to the VPS
 
+## Migration safeguards
+
+- CI runs `@teddy-open-finance/back-end:migrate:run` against a PostgreSQL service and fails if migrations are not executable.
+- Deploy validates that migrations were registered in production (`migrations` table count) before considering rollout successful.
+- The production `.env` includes:
+  - `DATABASE_RUN_MIGRATIONS=true`
+  - `REQUIRED_MIGRATIONS_COUNT=3`
+
 ## Pre-deploy release gate
 
 Run this gate before merging to `main` or triggering a manual deploy:
