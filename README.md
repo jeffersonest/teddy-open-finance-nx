@@ -1,101 +1,94 @@
-# TeddyOpenFinance
+# Teddy Open Finance
 
-<a alt="Nx logo" href="https://nx.dev" target="_blank" rel="noreferrer"><img src="https://raw.githubusercontent.com/nrwl/nx/master/images/nx-logo.png" width="45"></a>
+Monorepo Nx com MVP full-stack para gestão de clientes, com autenticação JWT, CRUD, UI React e pipeline de deploy para produção.
 
-✨ Your new, shiny [Nx workspace](https://nx.dev) is ready ✨.
+## Stack
 
-[Learn more about this workspace setup and its capabilities](https://nx.dev/nx-api/next?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects) or run `npx nx graph` to visually explore what was created. Now, let's get you up to speed!
+- Front-end: React 19 + Vite + TypeScript + Tailwind
+- Back-end: NestJS 11 + TypeORM + PostgreSQL
+- Monorepo: Nx (apps + libs compartilhadas)
+- Contratos: `@teddy-open-finance/contracts`
 
-## Run tasks
+## Estrutura
 
-To run the dev server for your app, use:
-
-```sh
-npx nx dev front-end
+```text
+apps/
+  back-end/        API NestJS
+  back-end-e2e/    E2E da API
+  front-end/       SPA React
+  front-end-e2e/   E2E do front
+libs/
+  shared/contracts Tipos e contratos compartilhados
+docs/
+  production-deploy.md
 ```
 
-To create a production bundle:
+## Pré-requisitos
 
-```sh
-npx nx build front-end
+- Node.js 24+
+- npm 10+
+- Docker + Docker Compose (para stack completa)
+
+## Como rodar local
+
+1. Instale dependências:
+
+```bash
+npm install
 ```
 
-To see all available targets to run for a project, run:
+2. Suba API e front em terminais separados:
 
-```sh
-npx nx show project front-end
+```bash
+npx nx serve back-end
+npx nx serve front-end
 ```
 
-These targets are either [inferred automatically](https://nx.dev/concepts/inferred-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) or defined in the `project.json` or `package.json` files.
+3. Endpoints locais:
 
-[More about running tasks in the docs &raquo;](https://nx.dev/features/run-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- Front-end: `http://localhost:4200`
+- API: `http://localhost:3000`
+- Swagger: `http://localhost:3000/docs`
 
-## Add new projects
+## Qualidade e testes
 
-While you could add new projects to your workspace manually, you might want to leverage [Nx plugins](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) and their [code generation](https://nx.dev/features/generate-code?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) feature.
+- Gate principal:
 
-Use the plugin's generator to create new projects.
-
-To generate a new application, use:
-
-```sh
-npx nx g @nx/next:app demo
+```bash
+npm run ci:quality
 ```
 
-To generate a new library, use:
+- Gate de deploy (E2E críticos):
 
-```sh
-npx nx g @nx/react:lib mylib
+```bash
+npm run ci:deploy-gate
 ```
 
-You can use `npx nx list` to get a list of installed plugins. Then, run `npx nx list <plugin-name>` to learn about more specific capabilities of a particular plugin. Alternatively, [install Nx Console](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) to browse plugins and generators in your IDE.
+## Banco e migrations
 
-[Learn more about Nx plugins &raquo;](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) | [Browse the plugin registry &raquo;](https://nx.dev/plugin-registry?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- Rodar migrations manualmente:
 
-## Set up CI!
-
-### Step 1
-
-To connect to Nx Cloud, run the following command:
-
-```sh
-npx nx connect
+```bash
+npx nx run @teddy-open-finance/back-end:migrate:run
 ```
 
-Connecting to Nx Cloud ensures a [fast and scalable CI](https://nx.dev/ci/intro/why-nx-cloud?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects) pipeline. It includes features such as:
+- Seed de clientes:
 
-- [Remote caching](https://nx.dev/ci/features/remote-cache?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task distribution across multiple machines](https://nx.dev/ci/features/distribute-task-execution?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Automated e2e test splitting](https://nx.dev/ci/features/split-e2e-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Task flakiness detection and rerunning](https://nx.dev/ci/features/flaky-tasks?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-### Step 2
-
-Use the following command to configure a CI workflow for your workspace:
-
-```sh
-npx nx g ci-workflow
+```bash
+npx nx run @teddy-open-finance/back-end:seed:clients
 ```
 
-[Learn more about Nx on CI](https://nx.dev/ci/intro/ci-with-nx#ready-get-started-with-your-provider?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+## Deploy e release
 
-## Install Nx Console
+- Fluxo: feature/fix -> `develop` -> release PR `develop -> main`
+- Deploy de produção: workflow `Deploy Production`
+- Guia completo: `docs/production-deploy.md`
 
-Nx Console is an editor extension that enriches your developer experience. It lets you run tasks, generate code, and improves code autocompletion in your IDE. It is available for VSCode and IntelliJ.
+## Documentação por app
 
-[Install Nx Console &raquo;](https://nx.dev/getting-started/editor-setup?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+- API: `apps/back-end/README.md`
+- Front-end: `apps/front-end/README.md`
 
-## Useful links
+## Memória do projeto
 
-Learn more:
-
-- [Learn more about this workspace setup](https://nx.dev/nx-api/next?utm_source=nx_project&amp;utm_medium=readme&amp;utm_campaign=nx_projects)
-- [Learn about Nx on CI](https://nx.dev/ci/intro/ci-with-nx?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [Releasing Packages with Nx release](https://nx.dev/features/manage-releases?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-- [What are Nx plugins?](https://nx.dev/concepts/nx-plugins?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
-
-And join the Nx community:
-- [Discord](https://go.nx.dev/community)
-- [Follow us on X](https://twitter.com/nxdevtools) or [LinkedIn](https://www.linkedin.com/company/nrwl)
-- [Our Youtube channel](https://www.youtube.com/@nxdevtools)
-- [Our blog](https://nx.dev/blog?utm_source=nx_project&utm_medium=readme&utm_campaign=nx_projects)
+Para contexto arquitetural e decisões, consulte `MEMORY_PALACE.md` (arquivo local de trabalho, não versionado no git).
