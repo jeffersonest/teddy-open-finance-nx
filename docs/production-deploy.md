@@ -2,9 +2,11 @@
 
 ## Domains
 
-- `app.digai.chat` for the frontend
+- `teddy.digai.chat` for the frontend
 - `api.digai.chat` for the backend
 - `grafana.digai.chat` for observability
+
+`app.digai.chat` remains as a legacy host and is redirected to `teddy.digai.chat` by Caddy.
 
 ## GitHub Actions
 

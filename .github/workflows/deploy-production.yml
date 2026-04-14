@@ -117,7 +117,7 @@ jobs:
       - name: Upload production environment file
         run: |
           cat <<'EOF' > /tmp/teddy-production.env
-          APP_DOMAIN=app.digai.chat
+          APP_DOMAIN=teddy.digai.chat
           API_DOMAIN=api.digai.chat
           GRAFANA_DOMAIN=grafana.digai.chat
           BACKEND_IMAGE=${{ env.BACKEND_IMAGE }}
