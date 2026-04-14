@@ -13,6 +13,22 @@ The repository now expects two workflows:
 - `CI`: runs `nx affected -t lint typecheck test build`
 - `Deploy Production`: builds the apps, publishes Docker images to GHCR and deploys the stack to the VPS
 
+## Pre-deploy release gate
+
+Run this gate before merging to `main` or triggering a manual deploy:
+
+```bash
+npm run ci:quality
+npm run ci:deploy-gate
+```
+
+`ci:deploy-gate` validates the critical E2E paths:
+
+- Backend auth + clients CRUD (`@teddy-open-finance/back-end-e2e`)
+- Frontend login/session + clients flow with BRL mask (`@teddy-open-finance/front-end-e2e`)
+
+If one command fails, do not deploy.
+
 ## Required GitHub Secrets
 
 - `PROD_VPS_HOST`

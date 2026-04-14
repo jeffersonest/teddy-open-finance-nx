@@ -84,6 +84,13 @@
         "dependsOn": [
           "prune"
         ]
+      },
+      "seed:clients": {
+        "executor": "nx:run-commands",
+        "options": {
+          "command": "tsx src/infrastructure/config/database/typeorm/seeds/seed-clients.ts",
+          "cwd": "apps/back-end"
+        }
       }
     }
   },

@@ -6,12 +6,12 @@ export default defineConfig({
       cypressDir: 'src',
       bundler: 'vite',
       webServerCommands: {
-        default: 'npx nx run @teddy-open-finance/front-end:dev',
-        production: 'npx nx run @teddy-open-finance/front-end:preview',
+        default: 'npx vite --config apps/front-end/vite.config.mts --host localhost --port 4300',
+        production: 'npx vite --config apps/front-end/vite.config.mts --host localhost --port 4300',
       },
-      ciWebServerCommand: 'npx nx run @teddy-open-finance/front-end:preview',
-      ciBaseUrl: 'http://localhost:4200',
+      ciWebServerCommand: 'npx vite --config apps/front-end/vite.config.mts --host localhost --port 4300',
+      ciBaseUrl: 'http://localhost:4300',
     }),
-    baseUrl: 'http://localhost:4200',
+    baseUrl: 'http://localhost:4300',
   },
 });
