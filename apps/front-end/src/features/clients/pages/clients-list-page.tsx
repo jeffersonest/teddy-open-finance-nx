@@ -105,6 +105,13 @@ export function ClientsListPage() {
       {!isLoading && clients.length === 0 ? (
         <p className="clients-page__empty">Nenhum cliente cadastrado.</p>
       ) : null}
+
+      {!isLoading ? (
+        <button type="button" className="clients-page__create-button" onClick={() => setShowCreate(true)}>
+          Criar cliente
+        </button>
+      ) : null}
+
       {!isLoading && clients.length > 0 ? (
         <>
           <div className="clients-grid">
@@ -152,9 +159,6 @@ export function ClientsListPage() {
               </article>
             ))}
           </div>
-          <button type="button" className="clients-page__create-button" onClick={() => setShowCreate(true)}>
-            Criar cliente
-          </button>
           {totalPages > 1 ? (
             <nav className="clients-pagination" aria-label="Paginação de clientes">
               {buildPagination(page, totalPages).map((paginationItem, itemIndex) => (
