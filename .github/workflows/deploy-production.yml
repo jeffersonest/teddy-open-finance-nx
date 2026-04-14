@@ -119,6 +119,7 @@ jobs:
           LOG_PRETTY=false
           LOG_APP_NAME=teddy-backend
           DATABASE_RUN_MIGRATIONS=true
+          REQUIRED_MIGRATIONS_COUNT=3
           GF_SECURITY_ADMIN_USER=${{ secrets.PROD_GRAFANA_ADMIN_USER }}
           GF_SECURITY_ADMIN_PASSWORD=${{ secrets.PROD_GRAFANA_ADMIN_PASSWORD }}
           GHCR_USERNAME=${{ secrets.PROD_GHCR_USERNAME }}

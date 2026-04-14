@@ -47,4 +47,21 @@ for service_name in backend-1 backend-2; do
   done
 done
 
+required_migrations="${REQUIRED_MIGRATIONS_COUNT:-3}"
+applied_migrations="$(
+  docker compose --env-file .env exec -T postgres psql -U "${DATABASE_USER}" -d "${DATABASE_NAME}" -Atc \
+    "SELECT count(*) FROM migrations;"
+)"
+
+if [[ ! "${applied_migrations}" =~ ^[0-9]+$ ]]; then
+  echo "Unable to parse migrations count: ${applied_migrations}"
+  exit 1
+fi
+
+if (( applied_migrations < required_migrations )); then
+  echo "Expected at least ${required_migrations} registered migrations, found ${applied_migrations}"
+  docker compose --env-file .env logs --tail=120 backend-1 backend-2 postgres
+  exit 1
+fi
+
 docker compose --env-file .env ps
