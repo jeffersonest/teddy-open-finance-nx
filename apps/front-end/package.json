@@ -10,7 +10,6 @@
     ]
   },
   "dependencies": {
-    "@teddy-open-finance/contracts": "*",
     "@tanstack/react-query": "^5.96.2",
     "@teddy-open-finance/contracts": "*",
     "react-hook-form": "^7.72.1",
