@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { createJSONStorage, persist } from 'zustand/middleware';
 import type { AuthenticatedUser } from '@teddy-open-finance/contracts';
 
 interface AuthState {
@@ -28,6 +28,13 @@ export const useAuthStore = create<AuthState>()(
       },
       isAuthenticated: () => !!get().accessToken,
     }),
-    { name: 'teddy-auth' },
+    {
+      name: 'teddy-auth',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        refreshToken: state.refreshToken,
+        user: state.user,
+      }),
+    },
   ),
 );

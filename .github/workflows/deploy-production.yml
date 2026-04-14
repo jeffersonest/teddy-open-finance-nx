@@ -46,6 +46,9 @@ jobs:
       - name: Build backend
         run: npx nx build @teddy-open-finance/back-end
 
+      - name: Prepare backend runtime package files
+        run: npx nx run @teddy-open-finance/back-end:prune
+
       - name: Build frontend
         run: npx nx build @teddy-open-finance/front-end
         env:

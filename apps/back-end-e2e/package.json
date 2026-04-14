@@ -17,8 +17,7 @@
           "passWithNoTests": true
         },
         "dependsOn": [
-          "@teddy-open-finance/back-end:build",
-          "@teddy-open-finance/back-end:serve"
+          "@teddy-open-finance/back-end:build"
         ]
       }
     }

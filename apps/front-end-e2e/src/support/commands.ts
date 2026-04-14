@@ -18,9 +18,30 @@ declare namespace Cypress {
   }
 }
 
-// -- This is a parent command --
 Cypress.Commands.add('login', (email, password) => {
-  console.log('Custom command example: Login', email, password);
+  void password;
+  cy.clearCookies();
+  cy.clearLocalStorage();
+  cy.visit('/clients', {
+    onBeforeLoad(windowObject) {
+      const browserWindow = windowObject as unknown as { localStorage: { setItem: (key: string, value: string) => void } };
+      browserWindow.localStorage.setItem(
+        'teddy-auth',
+        JSON.stringify({
+          state: {
+            refreshToken: 'mock-refresh-token',
+            user: {
+              id: 'd6a703cb-213f-4282-8e2c-a59218a694f2',
+              email,
+              name: 'E2E User',
+            },
+          },
+          version: 0,
+        }),
+      );
+    },
+  });
+  cy.url().should('include', '/clients');
 });
 //
 // -- This is a child command --
