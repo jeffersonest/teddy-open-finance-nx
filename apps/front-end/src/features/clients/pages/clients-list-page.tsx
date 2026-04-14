@@ -207,7 +207,12 @@ export function ClientsListPage() {
         ) : null}
       </Modal>
 
-      <Modal open={!!deletingClient} onClose={() => setDeletingClient(null)} title="Excluir cliente:">
+      <Modal
+        open={!!deletingClient}
+        onClose={() => setDeletingClient(null)}
+        title="Excluir cliente:"
+        className="app-modal--delete"
+      >
         {deletingClient ? (
           <>
             <p className="app-modal__delete-text">
