@@ -413,6 +413,7 @@ html {
   height: 138px;
   box-sizing: border-box;
   background: #ffffff;
+  border: 2px solid transparent;
   border-radius: 8px;
   box-shadow: 0 0 4px 0 #0000001a;
   position: relative;
@@ -420,7 +421,8 @@ html {
 }
 
 .client-card--selected {
-  border: 1px dashed #5fa8ff;
+  border-color: #f97316;
+  box-shadow: 0 0 0 3px rgb(249 115 22 / 0.14);
 }
 
 .client-card__name {
