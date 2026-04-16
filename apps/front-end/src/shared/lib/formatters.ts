@@ -27,6 +27,14 @@ const brazilLongDateFormatter = new Intl.DateTimeFormat('pt-BR', {
   year: 'numeric',
 });
 
+const brazilDateTimeFormatter = new Intl.DateTimeFormat('pt-BR', {
+  day: '2-digit',
+  month: 'long',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
 export function formatCurrency(value: number) {
   return brazilCurrencyFormatter.format(value);
 }
@@ -45,4 +53,8 @@ export function formatShortDate(value: string) {
 
 export function formatLongDate(value: string) {
   return brazilLongDateFormatter.format(new Date(value));
+}
+
+export function formatDateTime(value: string) {
+  return brazilDateTimeFormatter.format(new Date(value));
 }

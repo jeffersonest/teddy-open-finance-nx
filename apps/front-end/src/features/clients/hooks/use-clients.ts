@@ -3,6 +3,7 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import {
   MAX_PAGE_SIZE,
   type Client,
+  type ClientFinancialHistoryItem,
   type CreateClientRequest,
   type Paginated,
   type UpdateClientRequest,
@@ -11,6 +12,7 @@ import { clientsApi } from '../api/clients-api';
 
 const CLIENTS_KEY = 'clients';
 const CLIENTS_DASHBOARD_KEY = [CLIENTS_KEY, 'dashboard'] as const;
+const CLIENTS_FINANCIAL_HISTORY_KEY = 'financial-history';
 
 interface DashboardClients {
   clients: Client[];
@@ -69,7 +71,10 @@ export function useClient(id: string) {
 
     queryClient.setQueriesData<Paginated<Client>>(
       {
-        predicate: (query) => query.queryKey[0] === CLIENTS_KEY && query.queryKey.length === 3,
+        predicate: (query) =>
+          query.queryKey[0] === CLIENTS_KEY &&
+          query.queryKey.length === 3 &&
+          typeof query.queryKey[1] === 'number',
       },
       (cachedClientsPage) => {
         if (!cachedClientsPage) {
@@ -102,6 +107,14 @@ export function useClient(id: string) {
   return clientQuery;
 }
 
+export function useClientFinancialHistory(id: string) {
+  return useQuery({
+    queryKey: [CLIENTS_KEY, id, CLIENTS_FINANCIAL_HISTORY_KEY],
+    queryFn: (): Promise<ClientFinancialHistoryItem[]> => clientsApi.listFinancialHistory(id),
+    enabled: !!id,
+  });
+}
+
 export function useCreateClient() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -123,6 +136,10 @@ export function useUpdateClient() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: [CLIENTS_KEY], exact: false });
       queryClient.invalidateQueries({ queryKey: [CLIENTS_KEY, variables.clientId], exact: true });
+      queryClient.invalidateQueries({
+        queryKey: [CLIENTS_KEY, variables.clientId, CLIENTS_FINANCIAL_HISTORY_KEY],
+        exact: true,
+      });
     },
   });
 }

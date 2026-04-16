@@ -1,7 +1,7 @@
-import { KeyboardEvent, MouseEvent, useState } from 'react';
+import { KeyboardEvent, MouseEvent, useEffect, useState } from 'react';
 import type { Client, CreateClientRequest, UpdateClientRequest } from '@teddy-open-finance/contracts';
 import toast from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { formatCurrency } from '../../../shared/lib/formatters';
 import { Modal } from '../../../shared/ui/modal';
 import { Button } from '../../../shared/ui/button';
@@ -13,8 +13,11 @@ const PAGE_SIZE_OPTIONS = [16, 20, 30, 50];
 
 export function ClientsListPage() {
   const navigate = useNavigate();
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(16);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [page, setPage] = useState(() => getPositiveInteger(searchParams.get('page'), 1));
+  const [pageSize, setPageSize] = useState(() =>
+    getPageSizeValue(searchParams.get('pageSize')),
+  );
   const [showCreate, setShowCreate] = useState(false);
   const [editingClient, setEditingClient] = useState<Client | null>(null);
   const [deletingClient, setDeletingClient] = useState<Client | null>(null);
@@ -73,7 +76,8 @@ export function ClientsListPage() {
   const totalPages = data?.totalPages ?? 1;
   const clients = data?.data ?? [];
   const selectedClientIds = new Set(selectedClients.map((selectedClient) => selectedClient.id));
-  const openClientDetail = (clientId: string) => navigate(`/clients/${clientId}`);
+  const openClientDetail = (clientId: string) =>
+    navigate(`/clients/${clientId}?page=${String(page)}&pageSize=${String(pageSize)}`);
   const preventCardNavigation = (event: MouseEvent<HTMLButtonElement>) => event.stopPropagation();
   const handleCardKeyDown = (event: KeyboardEvent<HTMLElement>, clientId: string) => {
     if (event.key !== 'Enter' && event.key !== ' ') {
@@ -83,6 +87,13 @@ export function ClientsListPage() {
     event.preventDefault();
     openClientDetail(clientId);
   };
+
+  useEffect(() => {
+    setSearchParams({
+      page: String(page),
+      pageSize: String(pageSize),
+    });
+  }, [page, pageSize, setSearchParams]);
 
   return (
     <section className="clients-page">
@@ -269,6 +280,24 @@ export function ClientsListPage() {
       </Modal>
     </section>
   );
+}
+
+function getPageSizeValue(pageSizeParam: string | null) {
+  const parsedPageSize = Number(pageSizeParam);
+  if (!PAGE_SIZE_OPTIONS.includes(parsedPageSize)) {
+    return PAGE_SIZE_OPTIONS[0];
+  }
+
+  return parsedPageSize;
+}
+
+function getPositiveInteger(value: string | null, fallbackValue: number) {
+  const parsedValue = Number(value);
+  if (!Number.isInteger(parsedValue) || parsedValue <= 0) {
+    return fallbackValue;
+  }
+
+  return parsedValue;
 }
 
 function buildPagination(currentPage: number, totalPages: number): Array<number | '...'> {

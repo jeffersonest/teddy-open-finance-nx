@@ -1,18 +1,37 @@
 import { useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import {
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
 import toast from 'react-hot-toast';
-import type { CreateClientRequest, UpdateClientRequest } from '@teddy-open-finance/contracts';
-import { formatCurrency, formatLongDate } from '../../../shared/lib/formatters';
+import type {
+  ClientFinancialHistoryField,
+  CreateClientRequest,
+  UpdateClientRequest,
+} from '@teddy-open-finance/contracts';
+import { formatCurrency, formatDateTime, formatLongDate } from '../../../shared/lib/formatters';
 import { Modal } from '../../../shared/ui/modal';
 import { Button } from '../../../shared/ui/button';
 import { ClientForm } from '../components/client-form';
-import { useClient, useDeleteClient, useUpdateClient } from '../hooks/use-clients';
+import {
+  useClient,
+  useClientFinancialHistory,
+  useDeleteClient,
+  useUpdateClient,
+} from '../hooks/use-clients';
 import { useSelectedClientsStore } from '../../../shared/stores/selected-clients-store';
 
 export function ClientDetailPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { data: client, isLoading, isError } = useClient(id);
+  const {
+    data: financialHistory = [],
+    isLoading: isFinancialHistoryLoading,
+    isError: isFinancialHistoryError,
+  } = useClientFinancialHistory(id);
   const updateClientMutation = useUpdateClient();
   const deleteClientMutation = useDeleteClient();
   const selectedClients = useSelectedClientsStore((state) => state.clients);
@@ -20,6 +39,10 @@ export function ClientDetailPage() {
   const removeClient = useSelectedClientsStore((state) => state.removeClient);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const clientsListPath = useMemo(
+    () => buildClientsListPath(searchParams.get('page'), searchParams.get('pageSize')),
+    [searchParams],
+  );
 
   const clientIsSelected = useMemo(
     () => selectedClients.some((selectedClient) => selectedClient.id === client?.id),
@@ -72,7 +95,7 @@ export function ClientDetailPage() {
     deleteClientMutation.mutate(client.id, {
       onSuccess: () => {
         toast.success('Cliente excluído');
-        navigate('/clients');
+        navigate(clientsListPath);
       },
       onError: () => toast.error('Erro ao excluir'),
     });
@@ -94,7 +117,7 @@ export function ClientDetailPage() {
           type="button"
           variant="ghost"
           className="client-detail-page__back-button"
-          onClick={() => navigate('/clients')}
+          onClick={() => navigate(clientsListPath)}
         >
           Voltar para clientes
         </Button>
@@ -109,7 +132,7 @@ export function ClientDetailPage() {
           type="button"
           variant="ghost"
           className="client-detail-page__back-button"
-          onClick={() => navigate('/clients')}
+          onClick={() => navigate(clientsListPath)}
         >
           <span className="client-detail-page__back-icon" aria-hidden="true">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -193,6 +216,61 @@ export function ClientDetailPage() {
             </div>
           </dl>
         </article>
+
+        <article className="client-detail-card client-detail-card--history">
+          <p className="client-detail-card__eyebrow">Histórico financeiro</p>
+
+          {isFinancialHistoryLoading ? (
+            <p className="client-detail-card__empty client-detail-card__empty--centered">
+              Carregando histórico financeiro...
+            </p>
+          ) : null}
+
+          {isFinancialHistoryError ? (
+            <p className="client-detail-card__empty client-detail-card__empty--centered">
+              Não foi possível carregar o histórico financeiro.
+            </p>
+          ) : null}
+
+          {!isFinancialHistoryLoading && !isFinancialHistoryError && financialHistory.length === 0 ? (
+            <p className="client-detail-card__empty client-detail-card__empty--centered">
+              Nenhuma alteração financeira foi registrada para este cliente.
+            </p>
+          ) : null}
+
+          {!isFinancialHistoryLoading &&
+          !isFinancialHistoryError &&
+          financialHistory.length > 0 ? (
+            <div className="client-history-list">
+              {financialHistory.map((historyEntry) => (
+                <article
+                  key={historyEntry.id}
+                  className={`client-history-item ${
+                    historyEntry.newValue < historyEntry.previousValue
+                      ? 'client-history-item--decrease'
+                      : ''
+                  }`}
+                >
+                  <div className="client-history-item__main">
+                    <div>
+                      <p className="client-history-item__label">
+                        {getHistoryFieldLabel(historyEntry.field)}
+                      </p>
+                      <p className="client-history-item__date">
+                        {formatDateTime(historyEntry.changedAt)}
+                      </p>
+                    </div>
+                    <p className="client-history-item__change">
+                      <span>{formatCurrency(historyEntry.previousValue)}</span>
+                      <span aria-hidden="true">→</span>
+                      <span>{formatCurrency(historyEntry.newValue)}</span>
+                    </p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : null}
+        </article>
       </div>
 
       <Modal open={showEditModal} onClose={() => setShowEditModal(false)} title="Editar cliente:">
@@ -228,4 +306,35 @@ export function ClientDetailPage() {
       </Modal>
     </section>
   );
+}
+
+function buildClientsListPath(pageParam: string | null, pageSizeParam: string | null) {
+  const hasPage = isPositiveInteger(pageParam);
+  const hasPageSize = isPositiveInteger(pageSizeParam);
+  if (!hasPage || !hasPageSize) {
+    return '/clients';
+  }
+
+  const query = new URLSearchParams({
+    page: pageParam ?? '1',
+    pageSize: pageSizeParam ?? '16',
+  });
+  return `/clients?${query.toString()}`;
+}
+
+function getHistoryFieldLabel(field: ClientFinancialHistoryField) {
+  if (field === 'salary') {
+    return 'Salário';
+  }
+
+  return 'Valor da empresa';
+}
+
+function isPositiveInteger(value: string | null) {
+  const parsedValue = Number(value);
+  if (!Number.isInteger(parsedValue) || parsedValue <= 0) {
+    return false;
+  }
+
+  return true;
 }
