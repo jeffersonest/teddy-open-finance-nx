@@ -10,6 +10,7 @@ vi.mock('../api/clients-api', () => ({
   clientsApi: {
     list: vi.fn(),
     getById: vi.fn(),
+    listFinancialHistory: vi.fn(),
     create: vi.fn(),
     update: vi.fn(),
     remove: vi.fn(),

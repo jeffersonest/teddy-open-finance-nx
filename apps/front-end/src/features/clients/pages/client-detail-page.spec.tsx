@@ -1,15 +1,21 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import type { Client } from '@teddy-open-finance/contracts';
+import type { Client, ClientFinancialHistoryItem } from '@teddy-open-finance/contracts';
 import toast from 'react-hot-toast';
 import { useSelectedClientsStore } from '../../../shared/stores/selected-clients-store';
 import { ClientDetailPage } from './client-detail-page';
-import { useClient, useDeleteClient, useUpdateClient } from '../hooks/use-clients';
+import {
+  useClient,
+  useClientFinancialHistory,
+  useDeleteClient,
+  useUpdateClient,
+} from '../hooks/use-clients';
 
 const navigateMock = vi.fn();
 
 vi.mock('../hooks/use-clients', () => ({
   useClient: vi.fn(),
+  useClientFinancialHistory: vi.fn(),
   useDeleteClient: vi.fn(),
   useUpdateClient: vi.fn(),
 }));
@@ -39,6 +45,17 @@ const client: Client = {
   updatedAt: '2026-04-15T10:00:00.000Z',
 };
 
+const financialHistory: ClientFinancialHistoryItem[] = [
+  {
+    id: 'history-1',
+    clientId: client.id,
+    field: 'salary',
+    previousValue: 4500,
+    newValue: 5000,
+    changedAt: '2026-04-15T11:30:00.000Z',
+  },
+];
+
 describe('ClientDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -49,6 +66,10 @@ describe('ClientDetailPage', () => {
       isLoading: false,
       isError: false,
     } as ReturnType<typeof useClient>);
+
+    vi.mocked(useClientFinancialHistory).mockReturnValue({
+      data: financialHistory,
+    } as ReturnType<typeof useClientFinancialHistory>);
 
     vi.mocked(useUpdateClient).mockReturnValue({
       mutate: vi.fn(),
@@ -73,6 +94,9 @@ describe('ClientDetailPage', () => {
     expect(screen.getByRole('heading', { name: /ana almeida/i })).toBeTruthy();
     expect(screen.getByText(/total de acessos/i)).toBeTruthy();
     expect(screen.getByText('4')).toBeTruthy();
+    expect(screen.getByText(/histórico financeiro/i)).toBeTruthy();
+    expect(screen.getByText(/r\$ 4\.500,00/i)).toBeTruthy();
+    expect(screen.getAllByText(/r\$ 5\.000,00/i)).toHaveLength(2);
 
     const selectionButton = screen.getByRole('button', { name: /selecionar cliente/i });
     fireEvent.click(selectionButton);
@@ -101,5 +125,19 @@ describe('ClientDetailPage', () => {
 
     expect(screen.getByRole('dialog')).toBeTruthy();
     expect(screen.getByText(/você está prestes a excluir o cliente/i)).toBeTruthy();
+  });
+
+  it('returns to the same list page when the query params are present', () => {
+    render(
+      <MemoryRouter initialEntries={['/clients/client-1?page=3&pageSize=20']}>
+        <Routes>
+          <Route path="/clients/:id" element={<ClientDetailPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /voltar para clientes/i }));
+
+    expect(navigateMock).toHaveBeenCalledWith('/clients?page=3&pageSize=20');
   });
 });

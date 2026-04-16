@@ -19,8 +19,10 @@ import { JwtAuthGuard } from '../../../auth/infrastructure/jwt/jwt-auth.guard.js
 import { CreateClientUseCase } from '../../application/use_cases/create-client.use-case.js';
 import { DeleteClientUseCase } from '../../application/use_cases/delete-client.use-case.js';
 import { GetClientUseCase } from '../../application/use_cases/get-client.use-case.js';
+import { ListClientFinancialHistoryUseCase } from '../../application/use_cases/list-client-financial-history.use-case.js';
 import { ListClientsUseCase } from '../../application/use_cases/list-clients.use-case.js';
 import { UpdateClientUseCase } from '../../application/use_cases/update-client.use-case.js';
+import { ClientFinancialHistoryResponseDto } from '../dto/client-financial-history-response.dto.js';
 import { ClientResponseDto, PaginatedClientsResponseDto } from '../dto/client-response.dto.js';
 import { CreateClientDto } from '../dto/create-client.dto.js';
 import { ListClientsQueryDto } from '../dto/list-clients-query.dto.js';
@@ -37,6 +39,7 @@ export class ClientsController {
     private readonly createClient: CreateClientUseCase,
     private readonly listClients: ListClientsUseCase,
     private readonly getClient: GetClientUseCase,
+    private readonly listClientFinancialHistory: ListClientFinancialHistoryUseCase,
     private readonly updateClient: UpdateClientUseCase,
     private readonly deleteClient: DeleteClientUseCase,
   ) {}
@@ -60,6 +63,15 @@ export class ClientsController {
       pageSize: result.pageSize,
       totalPages: result.totalPages,
     };
+  }
+
+  @Get('financial-history/:id')
+  @ApiOkResponse({ type: [ClientFinancialHistoryResponseDto] })
+  async listFinancialHistory(
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ): Promise<ClientFinancialHistoryResponseDto[]> {
+    const financialHistory = await this.listClientFinancialHistory.execute(id);
+    return financialHistory.map((entry) => ClientFinancialHistoryResponseDto.fromDomain(entry));
   }
 
   @Get(':id')
