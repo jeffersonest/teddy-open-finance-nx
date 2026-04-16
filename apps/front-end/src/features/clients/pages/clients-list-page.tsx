@@ -1,7 +1,10 @@
-import { useState } from 'react';
+import { KeyboardEvent, MouseEvent, useState } from 'react';
 import type { Client, CreateClientRequest, UpdateClientRequest } from '@teddy-open-finance/contracts';
 import toast from 'react-hot-toast';
+import { useNavigate } from 'react-router-dom';
+import { formatCurrency } from '../../../shared/lib/formatters';
 import { Modal } from '../../../shared/ui/modal';
+import { Button } from '../../../shared/ui/button';
 import { ClientForm } from '../components/client-form';
 import { useClients, useCreateClient, useDeleteClient, useUpdateClient } from '../hooks/use-clients';
 import { useSelectedClientsStore } from '../../../shared/stores/selected-clients-store';
@@ -9,6 +12,7 @@ import { useSelectedClientsStore } from '../../../shared/stores/selected-clients
 const PAGE_SIZE_OPTIONS = [16, 20, 30, 50];
 
 export function ClientsListPage() {
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(16);
   const [showCreate, setShowCreate] = useState(false);
@@ -65,13 +69,20 @@ export function ClientsListPage() {
     });
   };
 
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
-
   const totalClients = data?.total ?? 0;
   const totalPages = data?.totalPages ?? 1;
   const clients = data?.data ?? [];
   const selectedClientIds = new Set(selectedClients.map((selectedClient) => selectedClient.id));
+  const openClientDetail = (clientId: string) => navigate(`/clients/${clientId}`);
+  const preventCardNavigation = (event: MouseEvent<HTMLButtonElement>) => event.stopPropagation();
+  const handleCardKeyDown = (event: KeyboardEvent<HTMLElement>, clientId: string) => {
+    if (event.key !== 'Enter' && event.key !== ' ') {
+      return;
+    }
+
+    event.preventDefault();
+    openClientDetail(clientId);
+  };
 
   return (
     <section className="clients-page">
@@ -106,12 +117,6 @@ export function ClientsListPage() {
         <p className="clients-page__empty">Nenhum cliente cadastrado.</p>
       ) : null}
 
-      {!isLoading ? (
-        <button type="button" className="clients-page__create-button" onClick={() => setShowCreate(true)}>
-          Criar cliente
-        </button>
-      ) : null}
-
       {!isLoading && clients.length > 0 ? (
         <>
           <div className="clients-grid">
@@ -119,6 +124,11 @@ export function ClientsListPage() {
               <article
                 key={client.id}
                 className={`client-card ${selectedClientIds.has(client.id) ? 'client-card--selected' : ''}`}
+                onClick={() => openClientDetail(client.id)}
+                onKeyDown={(event) => handleCardKeyDown(event, client.id)}
+                tabIndex={0}
+                role="button"
+                aria-label={`Abrir detalhes de ${client.name}`}
               >
                 <h2 className="client-card__name">{client.name}</h2>
                 <p className="client-card__line">Salário: {formatCurrency(client.salary)}</p>
@@ -127,7 +137,10 @@ export function ClientsListPage() {
                   <button
                     type="button"
                     className="client-card__action"
-                    onClick={() => setEditingClient(client)}
+                    onClick={(event) => {
+                      preventCardNavigation(event);
+                      setEditingClient(client);
+                    }}
                     aria-label={`Editar ${client.name}`}
                   >
                     <img src="/reference-assets/edit-icon.svg" alt="" />
@@ -135,7 +148,10 @@ export function ClientsListPage() {
                   <button
                     type="button"
                     className="client-card__action"
-                    onClick={() => setDeletingClient(client)}
+                    onClick={(event) => {
+                      preventCardNavigation(event);
+                      setDeletingClient(client);
+                    }}
                     aria-label={`Excluir ${client.name}`}
                   >
                     <img src="/reference-assets/delete-icon.svg" alt="" />
@@ -143,7 +159,8 @@ export function ClientsListPage() {
                   <button
                     type="button"
                     className={`client-card__action client-card__action--plus ${selectedClientIds.has(client.id) ? 'client-card__action--active' : ''}`}
-                    onClick={() => {
+                    onClick={(event) => {
+                      preventCardNavigation(event);
                       const wasAdded = addClientToSelection(client);
                       if (!wasAdded) {
                         toast(`${client.name} já está selecionado`);
@@ -159,29 +176,50 @@ export function ClientsListPage() {
               </article>
             ))}
           </div>
-          {totalPages > 1 ? (
-            <nav className="clients-pagination" aria-label="Paginação de clientes">
-              {buildPagination(page, totalPages).map((paginationItem, itemIndex) => (
-                <button
-                  key={`${paginationItem}-${itemIndex}`}
-                  type="button"
-                  className={`clients-pagination__item ${
-                    paginationItem === page ? 'clients-pagination__item--active' : ''
-                  } ${paginationItem === '...' ? 'clients-pagination__ellipsis' : ''}`}
-                  onClick={() => {
-                    if (typeof paginationItem !== 'number') {
-                      return;
-                    }
-                    setPage(paginationItem);
-                  }}
-                  disabled={paginationItem === '...'}
-                >
-                  {paginationItem}
-                </button>
-              ))}
-            </nav>
-          ) : null}
+          <div className="clients-page__footer">
+            <Button
+              type="button"
+              variant="outline"
+              className="clients-page__create-button"
+              onClick={() => setShowCreate(true)}
+            >
+              Criar cliente
+            </Button>
+            {totalPages > 1 ? (
+              <nav className="clients-pagination" aria-label="Paginação de clientes">
+                {buildPagination(page, totalPages).map((paginationItem, itemIndex) => (
+                  <button
+                    key={`${paginationItem}-${itemIndex}`}
+                    type="button"
+                    className={`clients-pagination__item ${
+                      paginationItem === page ? 'clients-pagination__item--active' : ''
+                    } ${paginationItem === '...' ? 'clients-pagination__ellipsis' : ''}`}
+                    onClick={() => {
+                      if (typeof paginationItem !== 'number') {
+                        return;
+                      }
+                      setPage(paginationItem);
+                    }}
+                    disabled={paginationItem === '...'}
+                  >
+                    {paginationItem}
+                  </button>
+                ))}
+              </nav>
+            ) : null}
+          </div>
         </>
+      ) : null}
+
+      {!isLoading && clients.length === 0 ? (
+        <Button
+          type="button"
+          variant="outline"
+          className="clients-page__create-button"
+          onClick={() => setShowCreate(true)}
+        >
+          Criar cliente
+        </Button>
       ) : null}
 
       <Modal open={showCreate} onClose={() => setShowCreate(false)} title="Criar cliente:">
@@ -218,14 +256,14 @@ export function ClientsListPage() {
             <p className="app-modal__delete-text">
               Você está prestes a excluir o cliente: <strong>{deletingClient.name}</strong>
             </p>
-            <button
+            <Button
               type="button"
               className="app-modal__submit app-modal__submit--delete"
               onClick={handleConfirmDelete}
-              disabled={deleteClientMutation.isPending}
+              loading={deleteClientMutation.isPending}
             >
-              {deleteClientMutation.isPending ? 'Excluindo...' : 'Excluir cliente'}
-            </button>
+              Excluir cliente
+            </Button>
           </>
         ) : null}
       </Modal>

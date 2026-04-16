@@ -1,8 +1,21 @@
+import { useEffect } from 'react';
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { CreateClientRequest, UpdateClientRequest } from '@teddy-open-finance/contracts';
+import {
+  MAX_PAGE_SIZE,
+  type Client,
+  type CreateClientRequest,
+  type Paginated,
+  type UpdateClientRequest,
+} from '@teddy-open-finance/contracts';
 import { clientsApi } from '../api/clients-api';
 
 const CLIENTS_KEY = 'clients';
+const CLIENTS_DASHBOARD_KEY = [CLIENTS_KEY, 'dashboard'] as const;
+
+interface DashboardClients {
+  clients: Client[];
+  total: number;
+}
 
 export function useClients(page = 1, pageSize = 16) {
   return useQuery({
@@ -12,12 +25,81 @@ export function useClients(page = 1, pageSize = 16) {
   });
 }
 
-export function useClient(id: string) {
+export function useDashboardClients() {
   return useQuery({
+    queryKey: CLIENTS_DASHBOARD_KEY,
+    queryFn: async (): Promise<DashboardClients> => {
+      const firstPage = await clientsApi.list(1, MAX_PAGE_SIZE);
+
+      if (firstPage.totalPages <= 1) {
+        return {
+          clients: firstPage.data,
+          total: firstPage.total,
+        };
+      }
+
+      const remainingPages = await Promise.all(
+        Array.from({ length: firstPage.totalPages - 1 }, (_, pageIndex) =>
+          clientsApi.list(pageIndex + 2, MAX_PAGE_SIZE),
+        ),
+      );
+
+      return {
+        clients: [...firstPage.data, ...remainingPages.flatMap((clientsPage) => clientsPage.data)],
+        total: firstPage.total,
+      };
+    },
+  });
+}
+
+export function useClient(id: string) {
+  const queryClient = useQueryClient();
+
+  const clientQuery = useQuery({
     queryKey: [CLIENTS_KEY, id],
     queryFn: () => clientsApi.getById(id),
     enabled: !!id,
+    refetchOnMount: 'always',
   });
+
+  useEffect(() => {
+    if (!clientQuery.data) {
+      return;
+    }
+
+    queryClient.setQueriesData<Paginated<Client>>(
+      {
+        predicate: (query) => query.queryKey[0] === CLIENTS_KEY && query.queryKey.length === 3,
+      },
+      (cachedClientsPage) => {
+        if (!cachedClientsPage) {
+          return cachedClientsPage;
+        }
+
+        return {
+          ...cachedClientsPage,
+          data: cachedClientsPage.data.map((listedClient) =>
+            listedClient.id === clientQuery.data.id ? clientQuery.data : listedClient,
+          ),
+        };
+      },
+    );
+
+    queryClient.setQueryData<DashboardClients>(CLIENTS_DASHBOARD_KEY, (cachedDashboard) => {
+      if (!cachedDashboard) {
+        return cachedDashboard;
+      }
+
+      return {
+        ...cachedDashboard,
+        clients: cachedDashboard.clients.map((listedClient) =>
+          listedClient.id === clientQuery.data.id ? clientQuery.data : listedClient,
+        ),
+      };
+    });
+  }, [clientQuery.data, queryClient]);
+
+  return clientQuery;
 }
 
 export function useCreateClient() {
