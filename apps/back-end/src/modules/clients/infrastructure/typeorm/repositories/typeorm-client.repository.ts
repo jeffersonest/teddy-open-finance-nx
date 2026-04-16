@@ -39,7 +39,7 @@ export class TypeOrmClientRepository extends ClientRepository {
     const [rows, total] = await this.repository.findAndCount({
       skip: (options.page - 1) * options.pageSize,
       take: options.pageSize,
-      order: { createdAt: 'DESC' },
+      order: { createdAt: 'DESC', id: 'DESC' },
     });
     return {
       data: rows.map((row) => this.toDomain(row)),

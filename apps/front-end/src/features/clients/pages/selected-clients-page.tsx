@@ -1,12 +1,11 @@
+import { formatCurrency } from '../../../shared/lib/formatters';
 import { useSelectedClientsStore } from '../../../shared/stores/selected-clients-store';
+import { Button } from '../../../shared/ui/button';
 
 export function SelectedClientsPage() {
   const selectedClients = useSelectedClientsStore((state) => state.clients);
   const removeSelectedClient = useSelectedClientsStore((state) => state.removeClient);
   const clearSelectedClients = useSelectedClientsStore((state) => state.clearAll);
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
   return (
     <section className="selected-clients-page">
@@ -40,13 +39,14 @@ export function SelectedClientsPage() {
             ))}
           </div>
 
-          <button
+          <Button
             type="button"
+            variant="outline"
             onClick={clearSelectedClients}
             className="clients-page__create-button"
           >
             Limpar clientes selecionados
-          </button>
+          </Button>
         </>
       )}
     </section>
