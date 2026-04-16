@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { ChatBubble } from '../../features/chat/components/chat-bubble';
 import { useAuthStore } from '../../shared/auth/auth-store';
 
 const MOBILE_BREAKPOINT = 1200;
@@ -212,6 +213,8 @@ export function ProtectedLayout() {
           <Outlet />
         </main>
       </div>
+
+      <ChatBubble />
     </div>
   );
 }
