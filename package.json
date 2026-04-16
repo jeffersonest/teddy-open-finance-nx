@@ -13,10 +13,10 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
-      "eslint --fix"
+      "npx eslint --fix"
     ],
     "*.{json,md,css,html,yml,yaml}": [
-      "prettier --write"
+      "npx prettier --write"
     ]
   },
   "private": true,
