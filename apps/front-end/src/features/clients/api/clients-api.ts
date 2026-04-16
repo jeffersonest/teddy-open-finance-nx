@@ -1,5 +1,6 @@
 import type {
   Client,
+  ClientFinancialHistoryItem,
   CreateClientRequest,
   UpdateClientRequest,
   Paginated,
@@ -14,6 +15,11 @@ export const clientsApi = {
 
   getById: (clientId: string) =>
     apiClient.get<Client>(`/clients/${clientId}`).then((response) => response.data),
+
+  listFinancialHistory: (clientId: string) =>
+    apiClient
+      .get<ClientFinancialHistoryItem[]>(`/clients/financial-history/${clientId}`)
+      .then((response) => response.data),
 
   create: (clientData: CreateClientRequest) =>
     apiClient.post<Client>('/clients', clientData).then((response) => response.data),

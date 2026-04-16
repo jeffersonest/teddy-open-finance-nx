@@ -10,6 +10,7 @@ import {
 import { typeOrmFactory } from './infrastructure/config/database/typeorm/typeorm.config.js';
 import { HealthModule } from './infrastructure/health/health.module.js';
 import { MetricsModule } from './infrastructure/metrics/metrics.module.js';
+import { AgentModule } from './modules/agent/agent.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { ClientsModule } from './modules/clients/clients.module.js';
 
@@ -58,6 +59,7 @@ import { ClientsModule } from './modules/clients/clients.module.js';
     MetricsModule,
     AuthModule,
     ClientsModule,
+    AgentModule,
   ],
 })
 export class AppModule {}

@@ -1,5 +1,7 @@
 import { useForm } from 'react-hook-form';
 import type { CreateClientRequest } from '@teddy-open-finance/contracts';
+import { formatCurrency } from '../../../shared/lib/formatters';
+import { Button } from '../../../shared/ui/button';
 
 interface ClientFormProps {
   defaultValues?: Partial<CreateClientRequest>;
@@ -87,9 +89,9 @@ export function ClientForm({
         />
         <p className="app-modal__field-error">{errors.companyValuation?.message}</p>
       </div>
-      <button className="app-modal__submit" type="submit" disabled={loading}>
-        {loading ? 'Salvando...' : submitLabel}
-      </button>
+      <Button className="app-modal__submit" type="submit" loading={loading}>
+        {submitLabel}
+      </Button>
     </form>
   );
 }
@@ -124,10 +126,7 @@ function formatCurrencyMask(inputValue: string) {
     return '';
   }
 
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(valueInReais);
+  return formatCurrency(valueInReais);
 }
 
 function formatCurrencyFromNumber(rawValue?: number) {
@@ -135,8 +134,5 @@ function formatCurrencyFromNumber(rawValue?: number) {
     return '';
   }
 
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-  }).format(rawValue);
+  return formatCurrency(rawValue);
 }

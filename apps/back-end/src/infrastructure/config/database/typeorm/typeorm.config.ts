@@ -7,11 +7,13 @@ import { EnvironmentVariables } from '../../env/env.validation.js';
 import { CreateClientsTable1744200000000 } from './migrations/1744200000000-CreateClientsTable.js';
 import { CreateUsersTable1744300000000 } from './migrations/1744300000000-CreateUsersTable.js';
 import { AddSoftDeleteToClients1744400000000 } from './migrations/1744400000000-AddSoftDeleteToClients.js';
+import { CreateClientFinancialHistoryTable1744500000000 } from './migrations/1744500000000-CreateClientFinancialHistoryTable.js';
 
 const migrations = [
   CreateClientsTable1744200000000,
   CreateUsersTable1744300000000,
   AddSoftDeleteToClients1744400000000,
+  CreateClientFinancialHistoryTable1744500000000,
 ];
 
 export const typeOrmFactory = (

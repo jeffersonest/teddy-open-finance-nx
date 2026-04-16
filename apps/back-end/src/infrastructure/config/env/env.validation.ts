@@ -5,6 +5,7 @@ import {
   IsIn,
   IsInt,
   IsNotEmpty,
+  IsOptional,
   IsString,
   Max,
   Min,
@@ -79,6 +80,14 @@ export class EnvironmentVariables {
   @Transform(({ value }) => value === true || value === 'true')
   @IsBoolean()
   DATABASE_RUN_MIGRATIONS = false;
+
+  @IsOptional()
+  @IsString()
+  OPENAI_API_KEY?: string;
+
+  @IsOptional()
+  @IsString()
+  OPENAI_MODEL = 'gpt-4.1-mini';
 }
 
 export function validateEnv(config: Record<string, unknown>) {

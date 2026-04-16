@@ -22,4 +22,5 @@ export abstract class ClientRepository {
   abstract list(options: ListClientsOptions): Promise<ListClientsResult>;
   abstract save(client: Client): Promise<Client>;
   abstract delete(id: string): Promise<void>;
+  abstract findByName(name: string): Promise<Client[]>;
 }

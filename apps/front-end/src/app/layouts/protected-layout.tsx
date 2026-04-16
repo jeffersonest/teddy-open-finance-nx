@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Navigate, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { ChatBubble } from '../../features/chat/components/chat-bubble';
 import { useAuthStore } from '../../shared/auth/auth-store';
 
 const MOBILE_BREAKPOINT = 1200;
@@ -7,6 +8,8 @@ const MOBILE_BREAKPOINT = 1200;
 export function ProtectedLayout() {
   const accessToken = useAuthStore((state) => state.accessToken);
   const user = useAuthStore((state) => state.user);
+  const hasHydrated = useAuthStore((state) => state.hasHydrated);
+  const authResolved = useAuthStore((state) => state.authResolved);
   const logout = useAuthStore((state) => state.logout);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= MOBILE_BREAKPOINT);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
@@ -63,6 +66,10 @@ export function ProtectedLayout() {
     return !isSidebarCollapsed;
   }, [isMobile, isMobileSidebarOpen, isSidebarCollapsed]);
 
+  if (!hasHydrated || !authResolved) {
+    return null;
+  }
+
   if (!accessToken) {
     return <Navigate to="/login" replace />;
   }
@@ -97,6 +104,14 @@ export function ProtectedLayout() {
 
           <nav className="site-header__nav" aria-label="Navegação principal">
             <ul className="site-header__nav-list">
+              <li className="site-header__nav-item">
+                <NavLink
+                  to="/home"
+                  className={`site-header__nav-link ${isCurrentRoute(location.pathname, '/home') ? 'site-header__nav-link--active' : ''}`}
+                >
+                  Home
+                </NavLink>
+              </li>
               <li className="site-header__nav-item">
                 <NavLink
                   to="/clients"
@@ -142,8 +157,8 @@ export function ProtectedLayout() {
           <div className="side-nav__body">
             <nav className="side-nav__menu" aria-label="Itens do menu lateral">
               <ul className="side-nav__list">
-                <li className="side-nav__item">
-                  <NavLink to="/clients" className="side-nav__link" onClick={closeSidebar}>
+                <li className={`side-nav__item ${isCurrentRoute(location.pathname, '/home') ? 'side-nav__item--active' : ''}`}>
+                  <NavLink to="/home" className="side-nav__link" onClick={closeSidebar}>
                     <span className="side-nav__icon">
                       <HomeIcon />
                     </span>
@@ -198,6 +213,8 @@ export function ProtectedLayout() {
           <Outlet />
         </main>
       </div>
+
+      <ChatBubble />
     </div>
   );
 }
@@ -222,4 +239,3 @@ function UsersIcon() {
     </svg>
   );
 }
-

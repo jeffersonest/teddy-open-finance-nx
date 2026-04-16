@@ -5,9 +5,10 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: ReactNode;
+  className?: string;
 }
 
-export function Modal({ open, onClose, title, children }: ModalProps) {
+export function Modal({ open, onClose, title, children, className }: ModalProps) {
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -21,7 +22,11 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
   return (
     <>
       <div className="app-modal-backdrop" onClick={onClose} />
-      <section className="app-modal" role="dialog" aria-modal="true">
+      <section
+        className={className ? `app-modal ${className}` : 'app-modal'}
+        role="dialog"
+        aria-modal="true"
+      >
         <div className="app-modal__header">
           <h2 className="app-modal__title">{title}</h2>
           <button type="button" className="app-modal__close" onClick={onClose} aria-label="Fechar modal">

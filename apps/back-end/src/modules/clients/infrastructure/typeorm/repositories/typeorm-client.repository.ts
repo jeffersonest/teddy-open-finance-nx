@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { ILike, Repository } from 'typeorm';
 import { Client } from '../../../domain/entities/client.js';
 import {
   ClientRepository,
@@ -39,7 +39,7 @@ export class TypeOrmClientRepository extends ClientRepository {
     const [rows, total] = await this.repository.findAndCount({
       skip: (options.page - 1) * options.pageSize,
       take: options.pageSize,
-      order: { createdAt: 'DESC' },
+      order: { createdAt: 'DESC', id: 'DESC' },
     });
     return {
       data: rows.map((row) => this.toDomain(row)),
@@ -54,6 +54,14 @@ export class TypeOrmClientRepository extends ClientRepository {
 
   async delete(id: string): Promise<void> {
     await this.repository.softDelete({ id });
+  }
+
+  async findByName(name: string): Promise<Client[]> {
+    const rows = await this.repository.find({
+      where: { name: ILike(`%${name}%`) },
+      order: { name: 'ASC' },
+    });
+    return rows.map((row) => this.toDomain(row));
   }
 
   private toDomain(row: ClientPersistenceModel): Client {
