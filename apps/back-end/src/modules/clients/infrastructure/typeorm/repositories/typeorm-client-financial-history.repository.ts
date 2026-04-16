@@ -1,3 +1,4 @@
+import type { ClientFinancialHistoryField } from '@teddy-open-finance/contracts';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -38,6 +39,15 @@ export class TypeOrmClientFinancialHistoryRepository extends ClientFinancialHist
     );
     const savedRows = await this.repository.save(rows);
     return savedRows.map((savedRow) => this.toDomain(savedRow));
+  }
+
+  async listAll(field?: ClientFinancialHistoryField): Promise<ClientFinancialHistoryEntry[]> {
+    const where = field ? { field } : {};
+    const rows = await this.repository.find({
+      where,
+      order: { changedAt: 'DESC', id: 'DESC' },
+    });
+    return rows.map((row) => this.toDomain(row));
   }
 
   async listByClientId(clientId: string): Promise<ClientFinancialHistoryEntry[]> {

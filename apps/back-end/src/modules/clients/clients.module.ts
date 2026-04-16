@@ -3,8 +3,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { CreateClientUseCase } from './application/use_cases/create-client.use-case.js';
 import { DeleteClientUseCase } from './application/use_cases/delete-client.use-case.js';
 import { GetClientUseCase } from './application/use_cases/get-client.use-case.js';
+import { GetFinancialHistorySummaryUseCase } from './application/use_cases/get-financial-history-summary.use-case.js';
 import { ListClientFinancialHistoryUseCase } from './application/use_cases/list-client-financial-history.use-case.js';
 import { ListClientsUseCase } from './application/use_cases/list-clients.use-case.js';
+import { SearchClientsByNameUseCase } from './application/use_cases/search-clients-by-name.use-case.js';
 import { UpdateClientUseCase } from './application/use_cases/update-client.use-case.js';
 import { ClientFinancialHistoryRepository } from './domain/interfaces/client-financial-history.repository.js';
 import { ClientRepository } from './domain/interfaces/client.repository.js';
@@ -67,6 +69,23 @@ import { TypeOrmClientRepository } from './infrastructure/typeorm/repositories/t
       useFactory: (repo: ClientRepository) => new DeleteClientUseCase(repo),
       inject: [ClientRepository],
     },
+    {
+      provide: SearchClientsByNameUseCase,
+      useFactory: (repo: ClientRepository) => new SearchClientsByNameUseCase(repo),
+      inject: [ClientRepository],
+    },
+    {
+      provide: GetFinancialHistorySummaryUseCase,
+      useFactory: (repo: ClientFinancialHistoryRepository) =>
+        new GetFinancialHistorySummaryUseCase(repo),
+      inject: [ClientFinancialHistoryRepository],
+    },
+  ],
+  exports: [
+    ListClientsUseCase,
+    SearchClientsByNameUseCase,
+    ListClientFinancialHistoryUseCase,
+    GetFinancialHistorySummaryUseCase,
   ],
 })
 export class ClientsModule {}

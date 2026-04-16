@@ -14,4 +14,5 @@ export abstract class ClientFinancialHistoryRepository {
     entries: CreateClientFinancialHistoryEntryInput[],
   ): Promise<ClientFinancialHistoryEntry[]>;
   abstract listByClientId(clientId: string): Promise<ClientFinancialHistoryEntry[]>;
+  abstract listAll(field?: ClientFinancialHistoryField): Promise<ClientFinancialHistoryEntry[]>;
 }
