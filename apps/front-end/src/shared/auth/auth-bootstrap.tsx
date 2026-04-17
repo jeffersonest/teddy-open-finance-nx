@@ -9,7 +9,6 @@ export function AuthBootstrap() {
   const authResolved = useAuthStore((state) => state.authResolved);
   const setTokens = useAuthStore((state) => state.setTokens);
   const setAuthResolved = useAuthStore((state) => state.setAuthResolved);
-  const logout = useAuthStore((state) => state.logout);
   const navigate = useNavigate();
   const location = useLocation();
   const hasAttemptedRefresh = useRef(false);
@@ -39,14 +38,13 @@ export function AuthBootstrap() {
         }
       })
       .catch(() => {
-        logout();
+        setAuthResolved(true);
       });
   }, [
     accessToken,
     authResolved,
     hasHydrated,
     location.pathname,
-    logout,
     navigate,
     setAuthResolved,
     setTokens,
