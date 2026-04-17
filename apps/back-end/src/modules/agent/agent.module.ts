@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PinoLogger } from 'nestjs-pino';
 import type { EnvironmentVariables } from '../../infrastructure/config/env/env.validation.js';
 import { GetFinancialHistorySummaryUseCase } from '../clients/application/use_cases/get-financial-history-summary.use-case.js';
 import { ListClientFinancialHistoryUseCase } from '../clients/application/use_cases/list-client-financial-history.use-case.js';
@@ -27,6 +28,7 @@ import { LangchainAgentRunner } from './infrastructure/langchain/langchain-agent
         listClients: ListClientsUseCase,
         listHistory: ListClientFinancialHistoryUseCase,
         historySummary: GetFinancialHistorySummaryUseCase,
+        logger: PinoLogger,
       ) => {
         const apiKey = configService.get('OPENAI_API_KEY', { infer: true }) ?? '';
         const model = configService.get('OPENAI_MODEL', { infer: true });
@@ -39,7 +41,7 @@ import { LangchainAgentRunner } from './infrastructure/langchain/langchain-agent
           createGetFinancialHistorySummaryTool(historySummary),
         ];
 
-        return new LangchainAgentRunner(apiKey, model, tools, databaseUrl);
+        return new LangchainAgentRunner(apiKey, model, tools, databaseUrl, logger);
       },
       inject: [
         ConfigService,
@@ -47,6 +49,7 @@ import { LangchainAgentRunner } from './infrastructure/langchain/langchain-agent
         ListClientsUseCase,
         ListClientFinancialHistoryUseCase,
         GetFinancialHistorySummaryUseCase,
+        PinoLogger,
       ],
     },
   ],

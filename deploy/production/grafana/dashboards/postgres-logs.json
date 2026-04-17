@@ -24,7 +24,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "{job=\"docker\"} |~ \"postgres\"",
+          "expr": "{app=\"teddy-open-finance\", service=\"postgres\"}",
           "queryType": "range",
           "refId": "A"
         }
@@ -50,7 +50,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "sum(count_over_time({job=\"docker\"} |~ \"postgres\" |~ \"ERROR|FATAL\" [5m]))",
+          "expr": "sum(count_over_time({app=\"teddy-open-finance\", service=\"postgres\"} |~ \"ERROR|FATAL\" [5m]))",
           "legendFormat": "errors",
           "range": true,
           "refId": "A"
@@ -77,7 +77,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "sum(count_over_time({job=\"docker\"} |~ \"postgres\" |~ \"connection authorized|disconnection\" [5m]))",
+          "expr": "sum(count_over_time({app=\"teddy-open-finance\", service=\"postgres\"} |~ \"connection authorized|disconnection\" [5m]))",
           "legendFormat": "connections",
           "range": true,
           "refId": "A"
@@ -92,7 +92,7 @@
   "style": "dark",
   "tags": ["teddy", "postgres", "logs"],
   "templating": { "list": [] },
-  "time": { "from": "now-1h", "to": "now" },
+  "time": { "from": "now-24h", "to": "now" },
   "timepicker": {},
   "timezone": "",
   "title": "Postgres Logs",

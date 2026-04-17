@@ -72,8 +72,36 @@
     },
     {
       "datasource": { "type": "loki", "uid": "loki" },
-      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 8 },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "unit": "short" },
+        "overrides": []
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
       "id": 3,
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum by (event) (count_over_time({app=\"teddy-open-finance\", service=~\"backend-1|backend-2\"} | json | context=\"LangchainAgentRunner\" | event=~\"agent_chat_started|agent_chat_finished|agent_chat_failed|langchain_.*\" [5m]))",
+          "legendFormat": "{{event}}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Agent / LangChain Event Volume (5m)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "loki", "uid": "loki" },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "id": 4,
       "options": {
         "dedupStrategy": "none",
         "enableLogDetails": true,
@@ -87,7 +115,7 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "{app=\"teddy-open-finance\"} |~ \"agent|chat|openai|langchain\"",
+          "expr": "{app=\"teddy-open-finance\", service=~\"backend-1|backend-2\"} | json | context=\"LangchainAgentRunner\" | event=~\"agent_chat_started|agent_chat_finished|agent_chat_failed|langchain_.*\"",
           "queryType": "range",
           "refId": "A"
         }

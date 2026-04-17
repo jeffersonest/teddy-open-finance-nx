@@ -1,12 +1,17 @@
 import { ChatOpenAI } from '@langchain/openai';
 import { createReactAgent } from '@langchain/langgraph/prebuilt';
 import { PostgresSaver } from '@langchain/langgraph-checkpoint-postgres';
+import { PinoLogger } from 'nestjs-pino';
 import type { DynamicStructuredTool } from '@langchain/core/tools';
 import {
   agentChatDurationSeconds,
   agentChatTotal,
 } from '../../../../infrastructure/metrics/metrics.registry.js';
 import { AgentRunner } from '../../domain/interfaces/agent-runner.js';
+import {
+  createLangchainCallbackHandler,
+  previewValue,
+} from './langchain-observability.js';
 
 const SYSTEM_PROMPT = `You are a financial assistant for Teddy Open Finance. You help users query client data, salaries, company valuations, and financial history.
 
@@ -52,8 +57,10 @@ export class LangchainAgentRunner extends AgentRunner {
     private readonly model: string,
     private readonly tools: DynamicStructuredTool[],
     private readonly databaseUrl: string,
+    private readonly logger: PinoLogger,
   ) {
     super();
+    this.logger.setContext(LangchainAgentRunner.name);
   }
 
   async chat(message: string, threadId: string): Promise<string> {
@@ -77,10 +84,29 @@ export class LangchainAgentRunner extends AgentRunner {
     });
 
     const stopTimer = agentChatDurationSeconds.startTimer();
+    const startedAt = Date.now();
+    const callbacks = [createLangchainCallbackHandler(this.logger, threadId)];
+
+    this.logger.info(
+      {
+        event: 'agent_chat_started',
+        threadId,
+        messagePreview: previewValue(message),
+        model: this.model,
+      },
+      'Agent chat started',
+    );
+
     try {
       const result = await agent.invoke(
         { messages: [{ role: 'user', content: message }] },
-        { configurable: { thread_id: threadId } },
+        {
+          runName: 'teddy_agent_chat',
+          tags: ['agent', 'langchain', 'financial-assistant'],
+          metadata: { threadId },
+          callbacks,
+          configurable: { thread_id: threadId },
+        },
       );
 
       const lastMessage = result.messages[result.messages.length - 1];
@@ -90,10 +116,31 @@ export class LangchainAgentRunner extends AgentRunner {
 
       agentChatTotal.inc({ outcome: 'success' });
       stopTimer({ outcome: 'success' });
+      this.logger.info(
+        {
+          event: 'agent_chat_finished',
+          threadId,
+          durationMs: Date.now() - startedAt,
+          model: this.model,
+          replyPreview: previewValue(reply),
+        },
+        'Agent chat finished',
+      );
       return reply;
     } catch (error) {
       agentChatTotal.inc({ outcome: 'error' });
       stopTimer({ outcome: 'error' });
+      this.logger.error(
+        {
+          event: 'agent_chat_failed',
+          threadId,
+          durationMs: Date.now() - startedAt,
+          model: this.model,
+          errorName: error instanceof Error ? error.name : undefined,
+          errorMessage: error instanceof Error ? error.message : String(error),
+        },
+        'Agent chat failed',
+      );
       throw error;
     }
   }

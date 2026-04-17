@@ -47,7 +47,10 @@ x-backend-service: &backend-service
 
 services:
   caddy:
-    image: caddy:2-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile.caddy
+    image: teddy-caddy:ratelimit
     restart: unless-stopped
     depends_on:
       frontend:
@@ -125,6 +128,7 @@ services:
   loki:
     image: grafana/loki:3.6.0
     restart: unless-stopped
+    user: '0:0'
     command:
       - '-config.file=/etc/loki/config.yml'
     volumes:
