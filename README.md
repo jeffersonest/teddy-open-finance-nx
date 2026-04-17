@@ -487,6 +487,61 @@ PROD_GHCR_USERNAME          PROD_GHCR_TOKEN              (com escopo read:packag
 
 O Caddy é buildado pelo [deploy/production/Dockerfile.caddy](deploy/production/Dockerfile.caddy) usando `xcaddy build --with github.com/mholt/caddy-ratelimit` para habilitar o plugin de rate limit.
 
+### Arquitetura alvo na AWS com Cloudflare
+
+Se a aplicação fosse evoluída para uma infraestrutura AWS mantendo o mesmo desenho funcional de hoje, a estrutura recomendada seria:
+
+- `Cloudflare` na borda para DNS proxied, WAF, rate limiting e proteção da origem
+- `Application Load Balancer` como entrada HTTP/HTTPS na AWS
+- `ECS Fargate` para o `backend` e, se desejado, também para o `frontend`
+- `RDS PostgreSQL Multi-AZ` em subnets privadas
+- `ECR` para publicação das imagens
+- `Secrets Manager` e `SSM Parameter Store` para segredos e configuração
+- `CloudWatch Logs`, `Amazon Managed Prometheus` e `Amazon Managed Grafana` para observabilidade
+
+```mermaid
+flowchart LR
+    User[Usuário] --> CF[Cloudflare<br/>DNS proxied + WAF + Rate Limiting + Access]
+    CF --> ALB[Application Load Balancer]
+    ALB --> FE[Frontend<br/>ECS Fargate]
+    ALB --> BE1[Backend replica 1<br/>ECS Fargate]
+    ALB --> BE2[Backend replica 2<br/>ECS Fargate]
+    BE1 --> RDS[(RDS PostgreSQL<br/>Multi-AZ)]
+    BE2 --> RDS
+    BE1 --> CW[CloudWatch Logs]
+    BE2 --> CW
+    BE1 --> AMP[Amazon Managed Prometheus]
+    BE2 --> AMP
+    AMG[Amazon Managed Grafana] --> CW
+    AMG --> AMP
+    ECR[ECR] --> FE
+    ECR --> BE1
+    ECR --> BE2
+```
+
+#### Estrutura pensada de forma simples
+
+- `VPC` em pelo menos `2 Availability Zones`
+- `subnets públicas` para o `ALB`
+- `subnets privadas de aplicação` para os serviços `ECS`
+- `subnets privadas de dados` para o `RDS`
+- `security groups` restringindo:
+  - `ALB` recebendo tráfego público
+  - `backend` aceitando tráfego apenas do `ALB`
+  - `banco` aceitando tráfego apenas do `backend`
+
+#### Papel do Cloudflare nessa arquitetura
+
+- esconder IPs de origem com DNS proxied
+- aplicar `WAF` e `rate limiting` antes do tráfego chegar na AWS
+- proteger melhor endpoints críticos como:
+  - `/auth/login`
+  - `/auth/refresh`
+  - `/agent/chat`
+- usar `Cloudflare Access` para proteger superfícies administrativas, principalmente o `Grafana`
+
+Essa escolha mantém o comportamento atual do projeto, mas melhora segurança, disponibilidade e operação. Para este cenário, `ECS Fargate + RDS + Cloudflare` é uma opção mais coerente do que partir diretamente para `EKS`, que aumentaria bastante a complexidade operacional para um ganho pequeno neste contexto.
+
 ## Troubleshooting
 
 **`EADDRINUSE: port 3000`**
