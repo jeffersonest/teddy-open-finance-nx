@@ -16,6 +16,8 @@ x-backend-env: &backend-env
   LOG_LEVEL: ${LOG_LEVEL:-info}
   LOG_PRETTY: ${LOG_PRETTY:-false}
   LOG_APP_NAME: ${LOG_APP_NAME:-teddy-backend}
+  OPENAI_API_KEY: ${OPENAI_API_KEY}
+  OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4.1-mini}
 
 x-backend-service: &backend-service
   image: ${BACKEND_IMAGE}:${IMAGE_TAG}

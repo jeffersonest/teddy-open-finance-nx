@@ -133,6 +133,7 @@ jobs:
           LOG_LEVEL=${{ secrets.PROD_LOG_LEVEL }}
           LOG_PRETTY=false
           LOG_APP_NAME=teddy-backend
+          OPENAI_API_KEY=${{ secrets.PROD_OPENAI_API_KEY }}
           DATABASE_RUN_MIGRATIONS=true
           REQUIRED_MIGRATIONS_COUNT=3
           GF_SECURITY_ADMIN_USER=${{ secrets.PROD_GRAFANA_ADMIN_USER }}
