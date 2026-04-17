@@ -13,6 +13,7 @@ Monorepo Nx com um MVP full-stack de gestão de clientes para o desafio **Tech L
 - [Stack](#stack)
 - [Documentação do repositório](#documentação-do-repositório)
 - [Estrutura do monorepo](#estrutura-do-monorepo)
+- [Visão arquitetural](#visão-arquitetural)
 - [Capacidades entregues](#capacidades-entregues)
 - [Pré-requisitos](#pré-requisitos)
 - [Configuração — arquivos `.env`](#configuração--arquivos-env)
@@ -24,6 +25,7 @@ Monorepo Nx com um MVP full-stack de gestão de clientes para o desafio **Tech L
 - [Comandos Nx mais usados](#comandos-nx-mais-usados)
 - [Banco de dados e migrations](#banco-de-dados-e-migrations)
 - [Qualidade, testes e hooks de git](#qualidade-testes-e-hooks-de-git)
+- [Chat financeiro no app](#chat-financeiro-no-app)
 - [Agente de chat (`/agent/chat`)](#agente-de-chat-agentchat)
 - [Observabilidade local](#observabilidade-local)
 - [Deploy em produção](#deploy-em-produção)
@@ -92,6 +94,40 @@ apps/back-end/src/modules/<feature>/
   api/               Controllers + DTOs de entrada/saída
 ```
 
+## Visão arquitetural
+
+Alto nível da solução em produção (Caddy termina TLS e distribui tráfego; duas réplicas do back atrás dele; observabilidade na mesma rede Docker):
+
+```mermaid
+flowchart LR
+    User[Usuário] -->|HTTPS| Caddy[Caddy 2<br/>xcaddy + caddy-ratelimit<br/>teddy.digai.chat<br/>api.digai.chat<br/>grafana.digai.chat]
+    Caddy -->|SPA estática| FrontNginx[frontend<br/>Nginx + React build]
+    Caddy -->|/agent/chat → 10 req/min/IP<br/>demais → 120 req/min/IP| Backend1[backend-1<br/>NestJS]
+    Caddy --> Backend2[backend-2<br/>NestJS]
+    Caddy -->|admin| Grafana[Grafana]
+    Backend1 & Backend2 --> Postgres[(PostgreSQL 16)]
+    Backend1 & Backend2 -->|logs Pino JSON| Promtail[Promtail]
+    Backend1 & Backend2 -.->|OpenAI API| OpenAI[OpenAI GPT-4.1-mini]
+    Backend1 & Backend2 -->|/metrics| Prometheus[Prometheus]
+    Promtail --> Loki[Loki]
+    Prometheus --> Grafana
+    Loki --> Grafana
+```
+
+### Decisões arquiteturais principais
+
+| Decisão                                                             | Por quê                                                                                                             |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **Clean Architecture por módulo no back**                           | Isola regras de negócio em `domain/application`, permite trocar infra sem quebrar use cases (ex.: testes com mock). |
+| **Contratos compartilhados em `libs/shared/contracts`**             | Elimina divergência de tipos entre front e back; DTOs e enums vivem em uma fonte única de verdade.                  |
+| **Refresh token em cookie `HttpOnly` + access token só em memória** | Minimiza exposição XSS; access token nunca toca `localStorage`. Boot chama `/auth/refresh` pra reidratar sessão.    |
+| **Agente reutilizando use cases como Tools**                        | Zero duplicação de regra de negócio. O agente é uma "camada de apresentação" sobre a API.                           |
+| **Memória do agente via `PostgresSaver` com `thread_id = userId`**  | Continuidade de conversa entre sessões do usuário, sem lógica custom de histórico.                                  |
+| **Rate limit de `/agent/chat` no Caddy (não no app)**               | Bloqueia antes de bater no Node, protege quota OpenAI. Implementado com `xcaddy --with mholt/caddy-ratelimit`.      |
+| **Observabilidade provisionada como código**                        | Datasources e dashboards do Grafana versionados; paridade dev/prod.                                                 |
+| **Chat no front com Zustand `persist` + `clearMessages` no logout** | Histórico sobrevive refresh da página; sessão do usuário seguinte começa limpa.                                     |
+| **Duas réplicas do back atrás do Caddy**                            | Tolerância a restart/deploy sem downtime; round-robin com healthcheck em `/healthz`.                                |
+
 ## Capacidades entregues
 
 O projeto já cobre estes fluxos principais:
@@ -104,6 +140,22 @@ O projeto já cobre estes fluxos principais:
 - chat financeiro em `/agent/chat`
 - observabilidade com Prometheus, Loki, Promtail e Grafana
 - deploy automatizado em produção com GitHub Actions + GHCR + VPS
+
+### O que foi pensado na solução
+
+O desafio foi tratado como um produto operacional, não apenas como um CRUD. A aplicação precisava cobrir três necessidades ao mesmo tempo:
+
+- operação diária de clientes com leitura rápida de métricas
+- rastreabilidade de alterações financeiras relevantes
+- uma forma simples de explorar os dados por linguagem natural
+
+Por isso, a solução foi dividida em três pilares:
+
+- **gestão transacional**: autenticação, CRUD, paginação, seleção e detalhe do cliente
+- **camada analítica**: dashboard Home, rankings e histórico financeiro
+- **camada assistiva**: chat financeiro reaproveitando os mesmos casos de uso da API
+
+Essa escolha reduz duplicação de regra de negócio e deixa o produto mais coerente: o dado que aparece no dashboard, na página de detalhe e no chat parte da mesma base.
 
 Principais rotas expostas pela API:
 
@@ -119,6 +171,21 @@ Arquitetura por aplicação:
 - Back-end: NestJS com Clean Architecture por módulo. O ponto de entrada é [apps/back-end/src/app.module.ts](./apps/back-end/src/app.module.ts) e a estrutura detalhada está no [README do back-end](./apps/back-end/README.md).
 - Front-end: SPA React com feature folders, Zustand e React Query. O ponto de entrada visual é [apps/front-end/src/app/app.tsx](./apps/front-end/src/app/app.tsx) e a visão geral está no [README do front-end](./apps/front-end/README.md).
 - Contratos compartilhados: [libs/shared/contracts/](./libs/shared/contracts/), usados para manter o wire format consistente entre front e back.
+
+### Fluxo funcional do produto
+
+```mermaid
+flowchart LR
+    Login[Login] --> Home[Home / Dashboard]
+    Home --> Clients[Listagem de clientes]
+    Clients --> Detail[Detalhe do cliente]
+    Detail --> History[Histórico financeiro]
+    Home --> Chat[Chat financeiro]
+    Clients --> Chat
+    Detail --> Chat
+    Chat --> Agent[Agente /agent/chat]
+    Agent --> ClientsData[Dados e agregados de clientes]
+```
 
 ## Pré-requisitos
 
@@ -291,6 +358,39 @@ Os hooks são instalados automaticamente no `npm install` (via `prepare` → `si
 npx simple-git-hooks
 ```
 
+## Chat financeiro no app
+
+O chat está disponível na área autenticada inteira, através de uma bolha fixa no layout protegido. Ele foi pensado como uma extensão da experiência de operação: o usuário navega pela Home, Clientes ou Detalhe e pode perguntar diretamente sobre salários, valuation, rankings, alterações financeiras e comportamento agregado da base.
+
+### O que o chat resolve no produto
+
+- evita navegação manual para perguntas simples sobre a base
+- transforma agregações de clientes em respostas rápidas no contexto da operação
+- reaproveita a API já existente, em vez de criar uma camada paralela de regra de negócio
+
+### Como a experiência foi desenhada
+
+- a bolha do chat vive no `ProtectedLayout`, então acompanha toda a área autenticada
+- as mensagens persistem em `localStorage` via Zustand para sobreviver a refresh
+- no logout, o histórico é limpo para evitar vazamento de contexto entre sessões
+- erros são traduzidos para PT-BR com mensagens amigáveis
+- em produção, o endpoint é protegido por rate limit no Caddy
+
+### Fluxo do chat no app
+
+```mermaid
+flowchart LR
+    User[Usuário autenticado] --> Bubble[ChatBubble]
+    Bubble --> Store[chat-store persistido]
+    Bubble --> API[POST /agent/chat]
+    API --> Agent[LangChain Agent]
+    Agent --> Tools[Tools baseadas nos use cases]
+    Tools --> DB[(PostgreSQL)]
+    Agent --> API
+    API --> Bubble
+    Bubble --> Store
+```
+
 ## Agente de chat (`/agent/chat`)
 
 Endpoint autenticado que usa LangChain + GPT-4.1-mini para responder perguntas sobre clientes e histórico financeiro. Utiliza 4 ferramentas (tools) que reaproveitam os use cases existentes:
@@ -303,6 +403,13 @@ Endpoint autenticado que usa LangChain + GPT-4.1-mini para responder perguntas s
 Memória de conversa persistida no Postgres via `PostgresSaver` do `@langchain/langgraph-checkpoint-postgres`. O `thread_id` do checkpoint é o UUID do usuário autenticado — histórico sobrevive entre sessões no back-end.
 
 **Para testar em dev:** preencha `OPENAI_API_KEY` no `.env` do back, suba o back, logue no front e use a bolha de chat. O front persiste as mensagens em `localStorage` via Zustand; em produção `/agent/chat` é rate-limitado pelo Caddy a **10 req/min/IP**.
+
+### Por que o agente foi implementado assim
+
+- o agente **não** fala direto com o banco; ele chama ferramentas que encapsulam use cases
+- isso preserva as regras já testadas no módulo `clients`
+- dashboards, detalhe e chat continuam coerentes porque usam a mesma fonte de verdade
+- a memória via `PostgresSaver` evita uma solução custom de histórico de conversa
 
 ## Observabilidade local
 
