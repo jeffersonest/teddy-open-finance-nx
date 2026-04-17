@@ -11,7 +11,9 @@ Monorepo Nx com um MVP full-stack de gestão de clientes para o desafio **Tech L
 ## Sumário
 
 - [Stack](#stack)
+- [Documentação do repositório](#documentação-do-repositório)
 - [Estrutura do monorepo](#estrutura-do-monorepo)
+- [Capacidades entregues](#capacidades-entregues)
 - [Pré-requisitos](#pré-requisitos)
 - [Configuração — arquivos `.env`](#configuração--arquivos-env)
   - [Back-end](#back-end-appsback-endenv)
@@ -43,6 +45,25 @@ Monorepo Nx com um MVP full-stack de gestão de clientes para o desafio **Tech L
 | Edge / TLS      | Caddy 2 (build customizada com `caddy-ratelimit`)                           |
 | CI / CD         | GitHub Actions, GHCR (Docker images), VPS Linux                             |
 
+## Documentação do repositório
+
+Documentos principais já existentes no projeto:
+
+- [README do back-end](./apps/back-end/README.md)
+- [README do front-end](./apps/front-end/README.md)
+- [Compose de produção](./deploy/production/docker-compose.yml)
+- [Script de deploy](./deploy/production/scripts/deploy.sh)
+- [Caddyfile de produção](./deploy/production/Caddyfile)
+- [Prometheus de produção](./deploy/production/prometheus.yml)
+- [Loki de produção](./deploy/production/loki-config.yml)
+- [Dashboards do Grafana](./apps/back-end/observability/grafana/dashboards/)
+
+Arquivos úteis para leitura rápida:
+
+- [Exemplo de env do back-end](./apps/back-end/.env.example)
+- [Exemplo de env do front-end](./apps/front-end/.env.example)
+- [Exemplo de env da stack de produção](./deploy/production/.env.example)
+
 ## Estrutura do monorepo
 
 ```text
@@ -70,6 +91,34 @@ apps/back-end/src/modules/<feature>/
   infrastructure/    Implementações concretas (TypeORM, LangChain, etc.)
   api/               Controllers + DTOs de entrada/saída
 ```
+
+## Capacidades entregues
+
+O projeto já cobre estes fluxos principais:
+
+- autenticação com `accessToken` + `refreshToken`, incluindo refresh por cookie `HttpOnly`
+- CRUD completo de clientes com listagem paginada
+- dashboard Home com métricas e rankings
+- página de detalhes do cliente com contador de acessos
+- histórico financeiro de salário e valuation
+- chat financeiro em `/agent/chat`
+- observabilidade com Prometheus, Loki, Promtail e Grafana
+- deploy automatizado em produção com GitHub Actions + GHCR + VPS
+
+Principais rotas expostas pela API:
+
+| Grupo   | Rotas principais                                                                                                                       |
+| ------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| Auth    | `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`, `POST /auth/logout`                                                   |
+| Clients | `POST /clients`, `GET /clients`, `GET /clients/:id`, `PATCH /clients/:id`, `DELETE /clients/:id`, `GET /clients/financial-history/:id` |
+| Agent   | `POST /agent/chat`                                                                                                                     |
+| Infra   | `GET /healthz`, `GET /metrics`, `GET /docs`                                                                                            |
+
+Arquitetura por aplicação:
+
+- Back-end: NestJS com Clean Architecture por módulo. O ponto de entrada é [apps/back-end/src/app.module.ts](./apps/back-end/src/app.module.ts) e a estrutura detalhada está no [README do back-end](./apps/back-end/README.md).
+- Front-end: SPA React com feature folders, Zustand e React Query. O ponto de entrada visual é [apps/front-end/src/app/app.tsx](./apps/front-end/src/app/app.tsx) e a visão geral está no [README do front-end](./apps/front-end/README.md).
+- Contratos compartilhados: [libs/shared/contracts/](./libs/shared/contracts/), usados para manter o wire format consistente entre front e back.
 
 ## Pré-requisitos
 
@@ -293,6 +342,12 @@ Métricas customizadas expostas em `/metrics`:
 2. PR para `develop` (squash ou merge commit, ambos aceitos).
 3. Quando o marco é atingido, abrir release PR `develop → main` e taggear `main` com `vX.Y.Z`.
 4. O merge em `main` dispara **Deploy Production**.
+
+Arquivos centrais desse fluxo:
+
+- [deploy/production/scripts/deploy.sh](./deploy/production/scripts/deploy.sh)
+- [deploy/production/docker-compose.yml](./deploy/production/docker-compose.yml)
+- [deploy/production/Dockerfile.caddy](./deploy/production/Dockerfile.caddy)
 
 ### Gate manual antes de bater em `main`
 
