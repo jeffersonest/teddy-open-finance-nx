@@ -12,7 +12,11 @@ export class RefreshTokenUseCase {
     private readonly userRepository: UserRepository,
   ) {}
 
-  async execute(token: string): Promise<RefreshTokenResult> {
+  async execute(token: string | null | undefined): Promise<RefreshTokenResult> {
+    if (!token) {
+      throw new InvalidCredentialsError();
+    }
+
     let payload: { sub: string };
     try {
       payload = this.tokenIssuer.verifyRefreshToken(token);

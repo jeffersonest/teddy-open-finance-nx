@@ -13,7 +13,6 @@ export class AuthenticatedUserDto implements AuthenticatedUser {
 
 export class LoginResponseDto implements LoginResponse {
   @ApiProperty() accessToken!: string;
-  @ApiProperty() refreshToken!: string;
   @ApiProperty({ type: AuthenticatedUserDto }) user!: AuthenticatedUserDto;
 }
 
