@@ -8,7 +8,6 @@ import { useAuthStore } from '../shared/auth/auth-store';
 function renderApp() {
   useAuthStore.setState({
     accessToken: null,
-    refreshToken: null,
     user: null,
     hasHydrated: true,
     authResolved: true,

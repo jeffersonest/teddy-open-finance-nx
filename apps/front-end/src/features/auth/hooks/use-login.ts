@@ -11,7 +11,7 @@ export function useLogin() {
   return useMutation({
     mutationFn: (credentials: LoginRequest) => authApi.login(credentials),
     onSuccess: (result) => {
-      setAuth(result.accessToken, result.refreshToken, result.user);
+      setAuth(result.accessToken, result.user);
       navigate('/');
     },
   });

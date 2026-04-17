@@ -7,6 +7,7 @@ let refreshRequest: Promise<string | null> | null = null;
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
   headers: { 'Content-Type': 'application/json' },
+  withCredentials: true,
 });
 
 apiClient.interceptors.request.use((config) => {
@@ -35,17 +36,12 @@ apiClient.interceptors.response.use(
 
     if (responseStatus === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
-      const { refreshToken, setTokens, logout } = useAuthStore.getState();
-
-      if (!refreshToken) {
-        logout();
-        return Promise.reject(error);
-      }
+      const { setTokens, logout } = useAuthStore.getState();
 
       try {
         if (!refreshRequest) {
           refreshRequest = axios
-            .post(`${API_BASE_URL}/auth/refresh`, { refreshToken })
+            .post(`${API_BASE_URL}/auth/refresh`, undefined, { withCredentials: true })
             .then((refreshResponse) => refreshResponse.data.accessToken as string)
             .catch(() => null)
             .finally(() => {
@@ -59,7 +55,7 @@ apiClient.interceptors.response.use(
           return Promise.reject(error);
         }
 
-        setTokens(nextAccessToken, refreshToken);
+        setTokens(nextAccessToken);
         originalRequest.headers.Authorization = `Bearer ${nextAccessToken}`;
         return apiClient(originalRequest);
       } catch {

@@ -63,6 +63,12 @@ npx nx run @teddy-open-finance/back-end:migrate:run
 npx nx run @teddy-open-finance/back-end:seed:clients
 ```
 
+- Seed de usuários:
+
+```bash
+npx nx run @teddy-open-finance/back-end:seed:users
+```
+
 ## Variáveis principais
 
 Veja `apps/back-end/.env.example`. Campos críticos:
