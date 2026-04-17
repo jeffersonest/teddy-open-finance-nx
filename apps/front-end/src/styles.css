@@ -243,7 +243,7 @@ html {
 
 .side-nav__body {
   width: 260px;
-  min-height: 896px;
+  min-height: 0;
   flex: 1;
   background: #ffffff;
   display: flex;
@@ -308,6 +308,15 @@ html {
   border-right: 2px solid #ee7d46;
 }
 
+.side-nav__footer-shell {
+  width: 260px;
+  height: 72px;
+  min-height: 72px;
+  margin-top: auto;
+  background: #ffffff;
+  box-shadow: 0 0 32px 0 #0000001a;
+}
+
 .side-nav__footer {
   width: 260px;
   height: 72px;
@@ -318,13 +327,29 @@ html {
   padding-bottom: 12px;
   padding-left: 24px;
   background: #ffffff;
-  box-shadow: 0 0 32px 0 #0000001a;
   border-top-left-radius: 16px;
   border-top-right-radius: 16px;
   border-bottom-right-radius: 0;
   border-bottom-left-radius: 0;
-  margin-top: auto;
   opacity: 1;
+}
+
+.side-nav__footer-button {
+  all: unset;
+  box-sizing: border-box;
+  width: 212px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9.5px 8px;
+  color: #111111;
+  cursor: pointer;
+}
+
+.side-nav__footer-button:hover,
+.side-nav__footer-button:focus-visible {
+  color: #ee7d46;
 }
 
 .side-nav__backdrop {
