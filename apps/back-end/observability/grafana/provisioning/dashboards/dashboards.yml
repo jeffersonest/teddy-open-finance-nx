@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: teddy-open-finance
+    orgId: 1
+    folder: Teddy Open Finance
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

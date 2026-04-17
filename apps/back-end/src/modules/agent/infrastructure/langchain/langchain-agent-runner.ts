@@ -2,6 +2,10 @@ import { ChatOpenAI } from '@langchain/openai';
 import { createReactAgent } from '@langchain/langgraph/prebuilt';
 import { PostgresSaver } from '@langchain/langgraph-checkpoint-postgres';
 import type { DynamicStructuredTool } from '@langchain/core/tools';
+import {
+  agentChatDurationSeconds,
+  agentChatTotal,
+} from '../../../../infrastructure/metrics/metrics.registry.js';
 import { AgentRunner } from '../../domain/interfaces/agent-runner.js';
 
 const SYSTEM_PROMPT = `You are a financial assistant for Teddy Open Finance. You help users query client data, salaries, company valuations, and financial history.
@@ -72,15 +76,26 @@ export class LangchainAgentRunner extends AgentRunner {
       checkpointSaver: this.checkpointer,
     });
 
-    const result = await agent.invoke(
-      { messages: [{ role: 'user', content: message }] },
-      { configurable: { thread_id: threadId } },
-    );
+    const stopTimer = agentChatDurationSeconds.startTimer();
+    try {
+      const result = await agent.invoke(
+        { messages: [{ role: 'user', content: message }] },
+        { configurable: { thread_id: threadId } },
+      );
 
-    const lastMessage = result.messages[result.messages.length - 1];
-    return typeof lastMessage.content === 'string'
-      ? lastMessage.content
-      : JSON.stringify(lastMessage.content);
+      const lastMessage = result.messages[result.messages.length - 1];
+      const reply = typeof lastMessage.content === 'string'
+        ? lastMessage.content
+        : JSON.stringify(lastMessage.content);
+
+      agentChatTotal.inc({ outcome: 'success' });
+      stopTimer({ outcome: 'success' });
+      return reply;
+    } catch (error) {
+      agentChatTotal.inc({ outcome: 'error' });
+      stopTimer({ outcome: 'error' });
+      throw error;
+    }
   }
 
   private async initialize(): Promise<void> {
