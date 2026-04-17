@@ -1,3 +1,7 @@
+{
+	order rate_limit before reverse_proxy
+}
+
 {$APP_DOMAIN} {
 	reverse_proxy frontend:80
 }
@@ -7,6 +11,23 @@ app.digai.chat {
 }
 
 {$API_DOMAIN} {
+	@chat path /agent/chat
+	rate_limit @chat {
+		zone chat_per_ip {
+			key {client_ip}
+			events 10
+			window 1m
+		}
+	}
+
+	rate_limit {
+		zone api_per_ip {
+			key {client_ip}
+			events 120
+			window 1m
+		}
+	}
+
 	reverse_proxy backend-1:3000 backend-2:3000 {
 		lb_policy round_robin
 		health_uri /healthz

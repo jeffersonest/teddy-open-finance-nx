@@ -47,7 +47,10 @@ x-backend-service: &backend-service
 
 services:
   caddy:
-    image: caddy:2-alpine
+    build:
+      context: .
+      dockerfile: Dockerfile.caddy
+    image: teddy-caddy:ratelimit
     restart: unless-stopped
     depends_on:
       frontend:
