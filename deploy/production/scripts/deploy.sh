@@ -28,7 +28,19 @@ fi
 
 cd "${deploy_root}"
 
-docker compose --env-file .env pull
+pullable_services=(
+  frontend
+  backend-1
+  backend-2
+  postgres
+  prometheus
+  loki
+  promtail
+  grafana
+)
+
+docker compose --env-file .env pull "${pullable_services[@]}"
+docker compose --env-file .env build caddy
 docker compose --env-file .env up -d --remove-orphans
 
 for service_name in backend-1 backend-2; do
