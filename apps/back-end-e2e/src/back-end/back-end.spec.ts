@@ -8,7 +8,8 @@ describe('@teddy-open-finance/back-end-e2e', () => {
     name: 'E2E User',
   };
   let accessToken = '';
-  let refreshToken = '';
+  let refreshTokenCookieHeader = '';
+  let refreshTokenCookie = '';
   let createdClientId = '';
 
   it('runs auth flow and clients CRUD', async () => {
@@ -25,12 +26,18 @@ describe('@teddy-open-finance/back-end-e2e', () => {
       expect(loginResponse.data.user.email).toBe(testUser.email);
       expect(loginResponse.data.user.name).toBe(testUser.name);
       expect(typeof loginResponse.data.accessToken).toBe('string');
-      expect(typeof loginResponse.data.refreshToken).toBe('string');
 
       accessToken = loginResponse.data.accessToken as string;
-      refreshToken = loginResponse.data.refreshToken as string;
+      refreshTokenCookieHeader = extractRefreshTokenCookieHeader(loginResponse.headers['set-cookie']);
+      refreshTokenCookie = extractRefreshTokenCookieValue(refreshTokenCookieHeader);
+      expect(refreshTokenCookie).toContain('teddy_refresh_token=');
+      expect(refreshTokenCookieHeader).toContain('HttpOnly');
 
-      const refreshResponse = await axios.post('/auth/refresh', { refreshToken });
+      const refreshResponse = await axios.post(
+        '/auth/refresh',
+        {},
+        { headers: { Cookie: refreshTokenCookie } },
+      );
       expect(refreshResponse.status).toBe(200);
       expect(typeof refreshResponse.data.accessToken).toBe('string');
       accessToken = refreshResponse.data.accessToken as string;
@@ -109,6 +116,14 @@ describe('@teddy-open-finance/back-end-e2e', () => {
         const axiosError = error as AxiosError;
         expect(axiosError.response?.status).toBe(404);
       }
+
+      const logoutResponse = await axios.post(
+        '/auth/logout',
+        {},
+        { headers: { Cookie: refreshTokenCookie } },
+      );
+      expect(logoutResponse.status).toBe(200);
+      expect(logoutResponse.data).toEqual({ message: 'User logged out successfully' });
     } finally {
       if (createdClientId && accessToken) {
         await axios.delete(`/clients/${createdClientId}`, {
@@ -128,3 +143,19 @@ describe('@teddy-open-finance/back-end-e2e', () => {
     }
   });
 });
+
+function extractRefreshTokenCookieHeader(setCookieHeaders: string[] | undefined) {
+  const refreshTokenCookie = setCookieHeaders?.find((cookieHeader) =>
+    cookieHeader.startsWith('teddy_refresh_token='),
+  );
+
+  if (!refreshTokenCookie) {
+    throw new Error('Expected refresh token cookie to be set');
+  }
+
+  return refreshTokenCookie;
+}
+
+function extractRefreshTokenCookieValue(cookieHeader: string) {
+  return cookieHeader.split(';')[0];
+}

@@ -5,7 +5,6 @@ import { useAuthStore } from './auth-store';
 
 export function AuthBootstrap() {
   const accessToken = useAuthStore((state) => state.accessToken);
-  const refreshToken = useAuthStore((state) => state.refreshToken);
   const hasHydrated = useAuthStore((state) => state.hasHydrated);
   const authResolved = useAuthStore((state) => state.authResolved);
   const setTokens = useAuthStore((state) => state.setTokens);
@@ -31,15 +30,10 @@ export function AuthBootstrap() {
 
     hasAttemptedRefresh.current = true;
 
-    if (!refreshToken) {
-      setAuthResolved(true);
-      return;
-    }
-
     authApi
-      .refresh(refreshToken)
+      .refresh()
       .then((result) => {
-        setTokens(result.accessToken, refreshToken);
+        setTokens(result.accessToken);
         if (location.pathname === '/login') {
           navigate('/home', { replace: true });
         }
@@ -54,7 +48,6 @@ export function AuthBootstrap() {
     location.pathname,
     logout,
     navigate,
-    refreshToken,
     setAuthResolved,
     setTokens,
   ]);

@@ -10,8 +10,5 @@ export const authApi = {
       .post<{ message: string }>('/auth/register', registrationData)
       .then((response) => response.data),
 
-  refresh: (refreshToken: string) =>
-    apiClient
-      .post<RefreshTokenResponse>('/auth/refresh', { refreshToken })
-      .then((response) => response.data),
+  refresh: () => apiClient.post<RefreshTokenResponse>('/auth/refresh').then((response) => response.data),
 };
