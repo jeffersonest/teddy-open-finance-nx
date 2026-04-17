@@ -51,12 +51,14 @@ If one command fails, do not deploy.
 - `PROD_JWT_REFRESH_SECRET`
 - `PROD_JWT_REFRESH_EXPIRES_IN`
 - `PROD_LOG_LEVEL`
+- `PROD_OPENAI_API_KEY`
 - `PROD_GRAFANA_ADMIN_USER`
 - `PROD_GRAFANA_ADMIN_PASSWORD`
 - `PROD_GHCR_USERNAME`
 - `PROD_GHCR_TOKEN`
 
 `PROD_GHCR_TOKEN` needs `read:packages` so the VPS can pull images from GHCR.
+`PROD_OPENAI_API_KEY` is required for the `/agent/chat` endpoint in production.
 
 ## VPS Layout
 
