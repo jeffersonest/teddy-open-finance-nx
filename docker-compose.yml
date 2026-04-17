@@ -63,6 +63,21 @@ services:
       timeout: 5s
       retries: 5
 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: teddy-prometheus
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.retention.time=7d'
+    depends_on:
+      - back-end
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./apps/back-end/observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - teddy-prometheus-data:/prometheus
+
   loki:
     image: grafana/loki:3.6.0
     container_name: teddy-loki
@@ -83,6 +98,7 @@ services:
       - loki
     volumes:
       - ./apps/back-end/observability/promtail-config.yml:/etc/promtail/config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
 
   grafana:
@@ -91,6 +107,7 @@ services:
     restart: unless-stopped
     depends_on:
       - loki
+      - prometheus
     environment:
       GF_AUTH_ANONYMOUS_ENABLED: 'true'
       GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
@@ -100,8 +117,11 @@ services:
     volumes:
       - teddy-grafana-data:/var/lib/grafana
       - ./apps/back-end/observability/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./apps/back-end/observability/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./apps/back-end/observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
 
 volumes:
   teddy-pgdata:
   teddy-loki-data:
   teddy-grafana-data:
+  teddy-prometheus-data:
