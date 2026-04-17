@@ -50,6 +50,14 @@ export function ProtectedLayout() {
 
   const greetingName = user?.name?.trim() || 'Usuário';
   const closeSidebar = () => setIsMobileSidebarOpen(false);
+  const collapseSidebar = () => {
+    if (isMobile) {
+      closeSidebar();
+      return;
+    }
+
+    setIsSidebarCollapsed(true);
+  };
   const handleLogout = async () => {
     closeSidebar();
     await logout();
@@ -189,14 +197,16 @@ export function ProtectedLayout() {
             </nav>
           </div>
 
-          <footer className="side-nav__footer">
-            <button type="button" className="side-nav__footer-button" onClick={handleLogout}>
-              <span className="side-nav__icon">
-                <LogoutIcon />
-              </span>
-              <span className="side-nav__label">Sair</span>
-            </button>
-          </footer>
+          <div className="side-nav__footer-shell">
+            <footer className="side-nav__footer">
+              <button type="button" className="side-nav__footer-button" onClick={handleLogout}>
+                <span className="side-nav__icon">
+                  <LogoutIcon />
+                </span>
+                <span className="side-nav__label">Sair</span>
+              </button>
+            </footer>
+          </div>
         </aside>
 
         <button
@@ -220,7 +230,7 @@ export function ProtectedLayout() {
           aria-label="Fechar menu lateral"
         />
 
-        <main className="content">
+        <main className="content" onClick={collapseSidebar}>
           <Outlet />
         </main>
       </div>
