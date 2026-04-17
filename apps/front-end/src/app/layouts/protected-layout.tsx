@@ -50,6 +50,10 @@ export function ProtectedLayout() {
 
   const greetingName = user?.name?.trim() || 'Usuário';
   const closeSidebar = () => setIsMobileSidebarOpen(false);
+  const handleLogout = async () => {
+    closeSidebar();
+    await logout();
+  };
   const toggleSidebar = () => {
     if (isMobile) {
       setIsMobileSidebarOpen((currentValue) => !currentValue);
@@ -129,7 +133,7 @@ export function ProtectedLayout() {
                 </NavLink>
               </li>
               <li className="site-header__nav-item">
-                <button type="button" className="site-header__nav-link" onClick={logout}>
+                <button type="button" className="site-header__nav-link" onClick={handleLogout}>
                   Sair
                 </button>
               </li>
@@ -185,7 +189,14 @@ export function ProtectedLayout() {
             </nav>
           </div>
 
-          <footer className="side-nav__footer" />
+          <footer className="side-nav__footer">
+            <button type="button" className="side-nav__footer-button" onClick={handleLogout}>
+              <span className="side-nav__icon">
+                <LogoutIcon />
+              </span>
+              <span className="side-nav__label">Sair</span>
+            </button>
+          </footer>
         </aside>
 
         <button
@@ -236,6 +247,16 @@ function UsersIcon() {
     <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       <circle cx="12" cy="8" r="4" />
       <path d="M5 20c0-3.3 3.1-6 7-6s7 2.7 7 6z" />
+    </svg>
+  );
+}
+
+function LogoutIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M10 5a1 1 0 0 1 1 1v2h-2V7H5v10h4v-1h2v2a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z" />
+      <path d="M13.3 8.3 17 12l-3.7 3.7 1.4 1.4 6.1-6.1-6.1-6.1z" />
+      <path d="M8 11h11v2H8z" />
     </svg>
   );
 }

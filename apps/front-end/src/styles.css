@@ -327,6 +327,24 @@ html {
   opacity: 1;
 }
 
+.side-nav__footer-button {
+  all: unset;
+  box-sizing: border-box;
+  width: 212px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9.5px 8px;
+  color: #111111;
+  cursor: pointer;
+}
+
+.side-nav__footer-button:hover,
+.side-nav__footer-button:focus-visible {
+  color: #ee7d46;
+}
+
 .side-nav__backdrop {
   display: none;
 }
