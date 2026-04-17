@@ -1,15 +1,18 @@
 import { Controller, Get, Header } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
-import { collectDefaultMetrics, register } from 'prom-client';
+import {
+  ensureDefaultMetricsCollected,
+  metricsRegister,
+} from './metrics.registry.js';
 
-collectDefaultMetrics();
+ensureDefaultMetricsCollected();
 
 @ApiExcludeController()
 @Controller('metrics')
 export class MetricsController {
   @Get()
-  @Header('Content-Type', register.contentType)
+  @Header('Content-Type', metricsRegister.contentType)
   async getMetrics(): Promise<string> {
-    return register.metrics();
+    return metricsRegister.metrics();
   }
 }
