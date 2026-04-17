@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import type { AuthenticatedUser } from '@teddy-open-finance/contracts';
+import { useChatStore } from '../../features/chat/store/chat-store';
 
 interface AuthState {
   accessToken: string | null;
@@ -30,11 +31,11 @@ export const useAuthStore = create<AuthState>()(
       setAuthResolved: (authResolved) => set({ authResolved }),
       logout: async () => {
         set({ accessToken: null, user: null, authResolved: true });
+        useChatStore.getState().clearMessages();
         await fetch(`${API_BASE_URL}/auth/logout`, {
           method: 'POST',
           credentials: 'include',
         }).catch(() => undefined);
-        window.location.href = '/login';
       },
       isAuthenticated: () => !!get().accessToken,
     }),
